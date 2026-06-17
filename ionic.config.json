@@ -1,0 +1,7 @@
+{
+  "name": "app-ev-edu",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
