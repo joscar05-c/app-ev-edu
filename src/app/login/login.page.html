@@ -1,0 +1,87 @@
+<ion-content [fullscreen]="true">
+  <div class="game-container">
+    <div class="background-overlay"></div>
+
+    <!-- PANTALLA DE LOGIN -->
+    @if (!estudianteConectado()) {
+      <div class="login-panel fade-in">
+        <div class="logo-container">
+          <div class="icon-shield">🛡️</div>
+          <h1>Academia Quest</h1>
+          <p class="subtitle">Conexión con Supabase</p>
+        </div>
+
+        <div class="input-group">
+          <label for="dni">Ingresa tu DNI</label>
+          <input
+            type="tel"
+            id="dni"
+            [(ngModel)]="dniInput"
+            placeholder="Ej. 71234567"
+            maxlength="8"
+            (keyup.enter)="conectarEstudiante()"
+            [disabled]="cargando()"
+          >
+        </div>
+
+        @if (mensajeError()) {
+          <div class="error-message bounce">
+            ⚠️ {{ mensajeError() }}
+          </div>
+        }
+
+        <button
+          class="btn-primary"
+          (click)="conectarEstudiante()"
+          [disabled]="cargando() || dniInput().length < 8"
+        >
+          @if (cargando()) {
+            <span class="spinner"></span> Verificando credencial...
+          } @else {
+            ENTRAR A LA ARENA
+          }
+        </button>
+      </div>
+    }
+
+    <!-- PANTALLA DE RESULTADO (DASHBOARD) -->
+    @if (estudianteConectado()) {
+      <div class="dashboard-panel slide-up">
+        <div class="header-status">
+          <div class="connection-success">
+            ✅ ¡Base de datos conectada!
+          </div>
+          <button class="btn-logout" (click)="cerrarSesion()">Salir</button>
+        </div>
+
+        <div class="profile-card">
+          <div class="avatar-circle">👤</div>
+          <div class="profile-info">
+            <h2>{{ estudianteConectado()?.nombre_completo }}</h2>
+            <div class="tags">
+              <span class="tag grade">{{ estudianteConectado()?.grado }}° "{{ estudianteConectado()?.seccion }}"</span>
+              <span class="tag school">{{ estudianteConectado()?.instituciones_educativas?.nombre }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-container">
+          <div class="stat-box xp-box">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-details">
+              <span class="stat-label">Experiencia</span>
+              <span class="stat-value">{{ estudianteConectado()?.xp }} XP</span>
+            </div>
+          </div>
+          <div class="stat-box level-box">
+            <div class="stat-icon">🏆</div>
+            <div class="stat-details">
+              <span class="stat-label">Nivel Actual</span>
+              <span class="stat-value">Nivel {{ estudianteConectado()?.rango_nivel }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
