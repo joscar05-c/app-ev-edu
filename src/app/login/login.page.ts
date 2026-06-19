@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { SupabaseService } from '../../services/supabase.service';
+import { SupabaseService } from '../services/supabase';
 
 @Component({
   selector: 'app-login',
