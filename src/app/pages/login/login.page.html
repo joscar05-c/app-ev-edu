@@ -2,7 +2,6 @@
   <div class="game-container">
     <div class="background-overlay"></div>
 
-    <!-- PANTALLA DE LOGIN -->
     @if (!estudianteConectado()) {
       <div class="login-panel fade-in">
         <div class="logo-container">
@@ -44,7 +43,6 @@
       </div>
     }
 
-    <!-- PANTALLA DE RESULTADO (DASHBOARD) -->
     @if (estudianteConectado()) {
       <div class="dashboard-panel slide-up">
         <div class="header-status">
@@ -81,6 +79,35 @@
             </div>
           </div>
         </div>
+
+        <div class="missions-section" style="margin-top: 25px;">
+          <h3 style="font-size: 18px; border-left: 4px solid var(--color-primary); padding-left: 10px; margin-bottom: 15px;">Misiones Disponibles</h3>
+
+          @if (cargandoMisiones()) {
+            <p class="empty-state">Buscando misiones... 📡</p>
+          } @else if (misiones().length === 0) {
+            <p class="empty-state" style="color: var(--color-text-muted); font-style: italic; text-align: center; padding: 20px; background: rgba(0,0,0,0.1); border-radius: 8px;">No hay misiones activas para tu grado en este momento. ¡Descansa, héroe!</p>
+          } @else {
+            <div class="mission-list" style="display: flex; flex-direction: column; gap: 10px;">
+              @for (mision of misiones(); track mision.id) {
+                <div class="mission-card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                  <div class="mission-info">
+                    <h4 style="margin: 0 0 5px 0; font-size: 16px; color: var(--color-primary);">{{ mision.titulo }}</h4>
+                    <span style="font-size: 12px; color: var(--color-accent);">Recompensa: +{{ mision.xp_recompensa }} XP</span>
+                  </div>
+                  <button
+                    class="btn-start-mission"
+                    style="background: var(--color-success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;"
+                    [routerLink]="['/mission-play', mision.id]"
+                  >
+                    JUGAR
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
       </div>
     }
   </div>

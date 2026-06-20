@@ -2,14 +2,15 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { SupabaseService } from '../services/supabase';
+import { RouterModule } from '@angular/router';
+import { SupabaseService } from '../../services/supabase';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [IonicModule, CommonModule, FormsModule, RouterModule]
 })
 export class LoginPage {
   private supabaseService = inject(SupabaseService);

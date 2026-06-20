@@ -1,0 +1,68 @@
+<ion-content [fullscreen]="true">
+  <div class="game-arena">
+
+    @if (cargando()) {
+      <div class="loading-screen">
+        <div class="spinner"></div>
+        <p>Cargando Arena de Batalla...</p>
+      </div>
+    }
+
+    @if (!cargando() && !misionCompletada()) {
+      <div class="mission-header">
+        <button class="btn-abandon" routerLink="/login">X Abandonar</button>
+        <div class="progress-container">
+          <span class="progress-text">Pregunta {{ indiceActual() + 1 }} de {{ preguntas().length }}</span>
+          <ion-progress-bar [value]="progreso" color="warning"></ion-progress-bar>
+        </div>
+      </div>
+
+      <div class="question-card slide-in-right">
+
+        @if (preguntaActual.multimedia?.tiene_multimedia) {
+          <div class="media-container">
+            <img [src]="preguntaActual.multimedia.url" alt="Imagen de apoyo" class="question-image"/>
+          </div>
+        }
+
+        <h2 class="enunciado">{{ preguntaActual.enunciado }}</h2>
+
+        <div class="options-grid">
+          @for (opcion of preguntaActual.estructura.opciones; track opcion.id) {
+            <button
+              class="btn-option"
+              [class.selected]="opcionEstaSeleccionada(opcion.id)"
+              (click)="seleccionarRespuesta(opcion.id)"
+            >
+              <span class="option-letter">{{ opcion.id }}</span>
+              <span class="option-text">{{ opcion.texto }}</span>
+            </button>
+          }
+        </div>
+
+      </div>
+
+      <div class="bottom-controls">
+        <button
+          class="btn-next"
+          [disabled]="!respuestasTemp()[preguntaActual.id]"
+          (click)="siguientePregunta()"
+        >
+          {{ indiceActual() === preguntas().length - 1 ? 'FINALIZAR MISIÓN' : 'SIGUIENTE' }}
+        </button>
+      </div>
+    }
+
+    @if (misionCompletada()) {
+      <div class="completion-screen fade-in">
+        <div class="trophy-icon">🏆</div>
+        <h1>¡Misión Completada!</h1>
+        <p>Tus respuestas han sido enviadas a la central.</p>
+        <div class="btn-group">
+          <button class="btn-primary" routerLink="/login">Volver al Cuartel</button>
+        </div>
+      </div>
+    }
+
+  </div>
+</ion-content>

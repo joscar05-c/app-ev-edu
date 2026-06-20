@@ -1,0 +1,198 @@
+:host {
+  --color-bg-dark: #0f172a;
+  --color-panel: rgba(30, 41, 59, 0.95);
+  --color-primary: #3b82f6;
+  --color-accent: #f59e0b;
+  --color-success: #10b981;
+  --color-text: #f8fafc;
+  --color-border: rgba(255, 255, 255, 0.1);
+}
+
+ion-content {
+  --background: var(--color-bg-dark);
+}
+
+.game-arena {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--color-text);
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+}
+
+/* Cabecera */
+.mission-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.btn-abandon {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.progress-container {
+  flex-grow: 1;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 5px;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+ion-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* Tarjeta Principal */
+.question-card {
+  flex-grow: 1;
+  padding: 30px 20px;
+  overflow-y: auto;
+}
+
+.media-container {
+  margin-bottom: 20px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--color-border);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.question-image {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.enunciado {
+  font-size: 22px;
+  line-height: 1.4;
+  margin: 0 0 30px 0;
+  font-weight: 600;
+}
+
+/* Opciones */
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--color-panel);
+  border: 2px solid var(--color-border);
+  padding: 15px;
+  border-radius: 12px;
+  color: var(--color-text);
+  font-size: 16px;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.btn-option:active {
+  transform: scale(0.98);
+}
+
+.btn-option.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.option-letter {
+  background: rgba(255,255,255,0.1);
+  width: 35px;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  margin-right: 15px;
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.btn-option.selected .option-letter {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Controles Inferiores */
+.bottom-controls {
+  padding: 20px;
+  background: var(--color-panel);
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-next {
+  width: 100%;
+  padding: 18px;
+  border-radius: 12px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  letter-spacing: 2px;
+  transition: opacity 0.3s;
+}
+
+.btn-next:disabled {
+  opacity: 0.3;
+}
+
+/* Pantallas extra */
+.loading-screen, .completion-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+}
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+.trophy-icon { font-size: 80px; margin-bottom: 20px; }
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white; border: none; padding: 15px 30px;
+  border-radius: 12px; font-weight: bold; margin-top: 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.slide-in-right { animation: slideInRight 0.3s ease-out; }
+.fade-in { animation: fade-in 0.5s ease-in; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

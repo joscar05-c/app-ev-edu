@@ -56,4 +56,86 @@ export class SupabaseService {
       return { data: [], error: 'No se pudieron cargar las misiones.' };
     }
   }
+
+  /**
+   * ADMIN: Obtiene TODAS las misiones creadas (activas e inactivas)
+   */
+  async obtenerTodasLasMisionesAdmin(): Promise<{ data: any[], error: string | null }> {
+    try {
+      const { data, error } = await this.supabase
+        .from('misiones')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return { data: data || [], error: null };
+    } catch (err: any) {
+      console.error('Error al cargar misiones en admin:', err);
+      return { data: [], error: 'No se pudieron cargar las misiones.' };
+    }
+  }
+
+  /**
+   * ADMIN: Crea una nueva misión y guarda sus preguntas dinámicas (JSONB)
+   */
+  async crearMisionConPreguntas(misionData: any, preguntasData: any[]): Promise<{ success: boolean, error: string | null }> {
+    try {
+      // 1. Insertamos la misión
+      const { data: mision, error: errorMision } = await this.supabase
+        .from('misiones')
+        .insert({
+          titulo: misionData.titulo,
+          descripcion: misionData.descripcion,
+          nivel_educativo: misionData.nivel_educativo,
+          grado: misionData.grado,
+          xp_recompensa: misionData.xp_recompensa,
+          activo: true // Por defecto activa al crearla
+        })
+        .select()
+        .single();
+
+      if (errorMision) throw errorMision;
+
+      // 2. Preparamos las preguntas con el ID de la misión recién creada
+      const preguntasInsert = preguntasData.map((p, index) => ({
+        mision_id: mision.id,
+        orden: index + 1,
+        tipo_pregunta: p.tipo,
+        enunciado: p.enunciado,
+        multimedia: p.multimedia || {},
+        estructura: p.estructura
+      }));
+
+      // 3. Insertamos las preguntas en bloque
+      const { error: errorPreguntas } = await this.supabase
+        .from('preguntas')
+        .insert(preguntasInsert);
+
+      if (errorPreguntas) throw errorPreguntas;
+
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Error al crear misión:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Obtiene las preguntas reales de una misión ordenadas correctamente.
+   */
+  async obtenerPreguntasDeMision(misionId: string): Promise<{ data: any[], error: string | null }> {
+    try {
+      const { data, error } = await this.supabase
+        .from('preguntas')
+        .select('*')
+        .eq('mision_id', misionId)
+        .order('orden', { ascending: true });
+
+      if (error) throw error;
+      return { data: data || [], error: null };
+    } catch (err: any) {
+      console.error('Error al cargar preguntas:', err);
+      return { data: [], error: 'No se pudieron cargar las preguntas.' };
+    }
+  }
 }
