@@ -6,7 +6,10 @@
         <h1>Crear Nueva Misión</h1>
         <p>Configura los detalles y las preguntas dinámicas</p>
       </div>
-      <button class="btn-cancel" routerLink="/admin/dashboard" [disabled]="guardando()">Cancelar</button>
+      <div class="header-actions">
+        <button class="btn-cancel" routerLink="/admin/dashboard" [disabled]="guardando()">Volver</button>
+        <button class="btn-logout" (click)="cerrarSesion()">Cerrar Sesión</button>
+      </div>
     </div>
 
     @if (mensajeError()) {

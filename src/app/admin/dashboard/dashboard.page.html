@@ -5,10 +5,16 @@
       <div class="header-titles">
         <h1>Panel Administrativo</h1>
         <p>Gestión de Misiones y Evaluaciones</p>
+        @if (admin()) {
+          <span class="admin-name">{{ admin()?.nombre_completo }}</span>
+        }
       </div>
-      <button class="btn-create" routerLink="/admin/crear-mision">
-        <span class="icon">➕</span> Nueva Misión
-      </button>
+      <div class="header-actions">
+        <button class="btn-create" routerLink="/admin/crear-mision">
+          <span class="icon">➕</span> Nueva Misión
+        </button>
+        <button class="btn-logout" (click)="cerrarSesion()">Cerrar Sesión</button>
+      </div>
     </div>
 
     @if (mensajeError()) {

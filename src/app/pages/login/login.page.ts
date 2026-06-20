@@ -1,9 +1,10 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-login',
@@ -12,8 +13,10 @@ import { SupabaseService } from '../../services/supabase';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule, RouterModule]
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   private supabaseService = inject(SupabaseService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   // Manejo de estado del estudiante
   dniInput = signal<string>('');
@@ -24,6 +27,17 @@ export class LoginPage {
   // Manejo de estado de las misiones
   misiones = signal<any[]>([]);
   cargandoMisiones = signal<boolean>(false);
+
+  ngOnInit() {
+    // Si ya tiene sesión, restaurar estado
+    const sesion = this.authService.obtenerSesion();
+    if (sesion) {
+      this.estudianteConectado.set(sesion);
+      if (sesion.rol === 'estudiante' && sesion.grado) {
+        this.cargarMisiones(sesion.instituciones_educativas?.nivel, sesion.grado);
+      }
+    }
+  }
 
   async conectarEstudiante() {
     if (this.dniInput().length < 8) return;
@@ -51,6 +65,15 @@ export class LoginPage {
       };
       this.estudianteConectado.set(estudianteFormateado);
 
+      // Persistir sesión
+      this.authService.guardarSesion(estudianteFormateado);
+
+      // Si es admin, redirigir al dashboard admin
+      if (estudianteFormateado.rol === 'admin') {
+        this.router.navigate(['/admin/dashboard']);
+        return;
+      }
+
       // Una vez logueado, cargamos sus misiones automáticamente
       this.cargarMisiones(estudianteFormateado.instituciones_educativas.nivel, estudianteFormateado.grado);
     }
@@ -71,9 +94,15 @@ export class LoginPage {
   }
 
   cerrarSesion() {
+    this.authService.cerrarSesion();
     this.estudianteConectado.set(null);
-    this.misiones.set([]); // Limpiamos las misiones al salir
+    this.misiones.set([]);
     this.dniInput.set('');
     this.mensajeError.set(null);
+  }
+
+  iniciarMision(misionId: string) {
+    // La sesión ya está en AuthService, mission-play la leerá de ahí
+    this.router.navigate(['/mission-play', misionId]);
   }
 }

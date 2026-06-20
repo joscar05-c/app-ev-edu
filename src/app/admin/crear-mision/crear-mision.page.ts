@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router, RouterModule } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-crear-mision',
@@ -14,6 +15,7 @@ import { SupabaseService } from '../../services/supabase';
 })
 export class CrearMisionPage {
   private supabaseService = inject(SupabaseService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   // Estado del formulario de la Misión
@@ -82,10 +84,14 @@ export class CrearMisionPage {
     this.guardando.set(false);
 
     if (success) {
-      // Redirigimos al dashboard si todo salió bien
       this.router.navigate(['/admin/dashboard']);
     } else {
       this.mensajeError.set(`Error al guardar: ${error}`);
     }
+  }
+
+  cerrarSesion() {
+    this.authService.cerrarSesion();
+    this.router.navigate(['/login']);
   }
 }

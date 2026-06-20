@@ -2,8 +2,9 @@ import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { RouterModule } from '@angular/router'; // Para el botón de "Crear Misión"
+import { Router, RouterModule } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
+import { AuthService } from '../../services/auth';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -14,12 +15,16 @@ import { SupabaseService } from '../../services/supabase';
 })
 export class DashboardPage implements OnInit {
   private supabaseService = inject(SupabaseService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
+  admin = signal<any>(null);
   misiones = signal<any[]>([]);
   cargando = signal<boolean>(true);
   mensajeError = signal<string | null>(null);
 
   ngOnInit() {
+    this.admin.set(this.authService.obtenerSesion());
     this.cargarMisiones();
   }
 
@@ -41,6 +46,11 @@ export class DashboardPage implements OnInit {
     } else {
       this.misiones.set(data);
     }
+  }
+
+  cerrarSesion() {
+    this.authService.cerrarSesion();
+    this.router.navigate(['/login']);
   }
 
   // Función placeholder para más adelante

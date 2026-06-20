@@ -98,7 +98,7 @@
                   <button
                     class="btn-start-mission"
                     style="background: var(--color-success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;"
-                    [routerLink]="['/mission-play', mision.id]"
+                    (click)="iniciarMision(mision.id)"
                   >
                     JUGAR
                   </button>

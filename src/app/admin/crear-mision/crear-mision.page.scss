@@ -18,15 +18,38 @@
 
 .admin-header {
   display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 30px; flex-wrap: wrap; gap: 15px;
 }
 
 .header-titles h1 { margin: 0 0 5px; font-size: 26px; font-weight: 700; }
 .header-titles p { margin: 0; color: var(--admin-text-light); }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .btn-cancel {
   background: white; border: 1px solid var(--admin-border);
   padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
+}
+
+.btn-logout {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fecaca;
+  }
 }
 
 /* Tarjetas de Formulario */

@@ -121,6 +121,56 @@ export class SupabaseService {
   }
 
   /**
+   * STUDENT: Guarda el intento de un estudiante en una misión con sus respuestas y calificación.
+   */
+  async guardarIntentoMision(intentoData: {
+    estudiante_id: string;
+    mision_id: string;
+    respuestas: any;
+    puntaje_total: number;
+    xp_ganado: number;
+  }): Promise<{ success: boolean, error: string | null }> {
+    try {
+      const { error } = await this.supabase
+        .from('intentos_misiones')
+        .insert({
+          estudiante_id: intentoData.estudiante_id,
+          mision_id: intentoData.mision_id,
+          respuestas: intentoData.respuestas,
+          puntaje_total: intentoData.puntaje_total,
+          xp_ganado: intentoData.xp_ganado,
+          completado: true,
+          finalizado_en: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Error al guardar intento:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Obtiene una misión por su ID.
+   */
+  async obtenerMisionPorId(misionId: string): Promise<{ data: any, error: string | null }> {
+    try {
+      const { data, error } = await this.supabase
+        .from('misiones')
+        .select('*')
+        .eq('id', misionId)
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err: any) {
+      console.error('Error al cargar misión:', err);
+      return { data: null, error: 'No se pudo cargar la misión.' };
+    }
+  }
+
+  /**
    * Obtiene las preguntas reales de una misión ordenadas correctamente.
    */
   async obtenerPreguntasDeMision(misionId: string): Promise<{ data: any[], error: string | null }> {

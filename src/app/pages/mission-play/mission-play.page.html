@@ -55,12 +55,53 @@
 
     @if (misionCompletada()) {
       <div class="completion-screen fade-in">
-        <div class="trophy-icon">🏆</div>
-        <h1>¡Misión Completada!</h1>
-        <p>Tus respuestas han sido enviadas a la central.</p>
-        <div class="btn-group">
-          <button class="btn-primary" routerLink="/login">Volver al Cuartel</button>
-        </div>
+
+        @if (guardando()) {
+          <div class="spinner"></div>
+          <p>Guardando resultados...</p>
+        } @else {
+          <div class="result-card">
+            <div class="trophy-icon" [style.filter]="'drop-shadow(0 0 20px ' + calificacionColor + ')'">
+              @if (puntajeObtenido() >= 70) {
+                🏆
+              } @else if (puntajeObtenido() >= 50) {
+                🎯
+              } @else {
+                📘
+              }
+            </div>
+
+            <h1 class="result-title" [style.color]="calificacionColor">{{ calificacionTexto }}</h1>
+
+            <div class="score-circle" [style.border-color]="calificacionColor">
+              <span class="score-number">{{ puntajeObtenido() }}%</span>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-item">
+                <span class="stat-value" style="color: #10b981;">{{ respuestasCorrectas() }}</span>
+                <span class="stat-label">Correctas</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" style="color: #ef4444;">{{ totalPreguntas() - respuestasCorrectas() }}</span>
+                <span class="stat-label">Incorrectas</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" style="color: #f59e0b;">{{ totalPreguntas() }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+            </div>
+
+            <p class="summary-text">
+              Respondiste {{ respuestasCorrectas() }} de {{ totalPreguntas() }} preguntas correctamente.
+            </p>
+
+            <div class="btn-group">
+              <button class="btn-primary" routerLink="/login">Volver al Cuartel</button>
+            </div>
+          </div>
+        }
+
       </div>
     }
 
