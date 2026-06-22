@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { Mision, Pregunta, IntentoMision, Estudiante } from '../models/mision.model';
+import { MULTIMEDIA } from '../config/game.config';
+
+interface SupabaseResponse<T> {
+  data: T;
+  error: string | null;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +19,8 @@ export class SupabaseService {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
-  /**
-   * Intenta loguear a un estudiante usando su DNI llamando a una función segura (RPC).
-   * Buena práctica: Oculta la lógica de tablas y JOINS detrás de la API de Supabase.
-   */
-  async loginConDni(dni: string): Promise<{ data: any, error: string | null }> {
+  async loginConDni(dni: string): Promise<SupabaseResponse<Estudiante | null>> {
     try {
-      // Llamamos a la función remota (RPC) creada en Postgres
       const { data, error } = await this.supabase.rpc('login_estudiante', {
         p_dni: dni
       });
@@ -36,10 +38,7 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * Obtiene las misiones activas para un nivel y grado específico.
-   */
-  async obtenerMisionesDisponibles(nivel: string, grado: number): Promise<{ data: any[], error: string | null }> {
+  async obtenerMisionesDisponibles(nivel: string, grado: number): Promise<SupabaseResponse<Mision[]>> {
     try {
       const { data, error } = await this.supabase
         .from('misiones')
@@ -57,10 +56,7 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * ADMIN: Obtiene TODAS las misiones creadas (activas e inactivas)
-   */
-  async obtenerTodasLasMisionesAdmin(): Promise<{ data: any[], error: string | null }> {
+  async obtenerTodasLasMisionesAdmin(): Promise<SupabaseResponse<Mision[]>> {
     try {
       const { data, error } = await this.supabase
         .from('misiones')
@@ -75,12 +71,11 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * ADMIN: Crea una nueva misión y guarda sus preguntas dinámicas (JSONB)
-   */
-  async crearMisionConPreguntas(misionData: any, preguntasData: any[]): Promise<{ success: boolean, error: string | null }> {
+  async crearMisionConPreguntas(
+    misionData: Partial<Mision>,
+    preguntasData: any[]
+  ): Promise<{ success: boolean; error: string | null }> {
     try {
-      // 1. Insertamos la misión
       const { data: mision, error: errorMision } = await this.supabase
         .from('misiones')
         .insert({
@@ -89,24 +84,22 @@ export class SupabaseService {
           nivel_educativo: misionData.nivel_educativo,
           grado: misionData.grado,
           xp_recompensa: misionData.xp_recompensa,
-          activo: true // Por defecto activa al crearla
+          activo: true
         })
         .select()
         .single();
 
       if (errorMision) throw errorMision;
 
-      // 2. Preparamos las preguntas con el ID de la misión recién creada
       const preguntasInsert = preguntasData.map((p, index) => ({
         mision_id: mision.id,
         orden: index + 1,
         tipo_pregunta: p.tipo,
         enunciado: p.enunciado,
-        multimedia: p.multimedia || {},
+        multimedia: p.multimedia || { tiene_multimedia: false },
         estructura: p.estructura
       }));
 
-      // 3. Insertamos las preguntas en bloque
       const { error: errorPreguntas } = await this.supabase
         .from('preguntas')
         .insert(preguntasInsert);
@@ -120,16 +113,7 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * STUDENT: Guarda el intento de un estudiante en una misión con sus respuestas y calificación.
-   */
-  async guardarIntentoMision(intentoData: {
-    estudiante_id: string;
-    mision_id: string;
-    respuestas: any;
-    puntaje_total: number;
-    xp_ganado: number;
-  }): Promise<{ success: boolean, error: string | null }> {
+  async guardarIntentoMision(intentoData: IntentoMision): Promise<{ success: boolean; error: string | null }> {
     try {
       const { error } = await this.supabase
         .from('intentos_misiones')
@@ -151,10 +135,7 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * Obtiene una misión por su ID.
-   */
-  async obtenerMisionPorId(misionId: string): Promise<{ data: any, error: string | null }> {
+  async obtenerMisionPorId(misionId: string): Promise<SupabaseResponse<Mision | null>> {
     try {
       const { data, error } = await this.supabase
         .from('misiones')
@@ -170,10 +151,7 @@ export class SupabaseService {
     }
   }
 
-  /**
-   * Obtiene las preguntas reales de una misión ordenadas correctamente.
-   */
-  async obtenerPreguntasDeMision(misionId: string): Promise<{ data: any[], error: string | null }> {
+  async obtenerPreguntasDeMision(misionId: string): Promise<SupabaseResponse<Pregunta[]>> {
     try {
       const { data, error } = await this.supabase
         .from('preguntas')
@@ -187,5 +165,72 @@ export class SupabaseService {
       console.error('Error al cargar preguntas:', err);
       return { data: [], error: 'No se pudieron cargar las preguntas.' };
     }
+  }
+
+  async verificarIntentoPrevio(
+    estudianteId: string,
+    misionId: string
+  ): Promise<SupabaseResponse<boolean>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('intentos_misiones')
+        .select('id')
+        .eq('estudiante_id', estudianteId)
+        .eq('mision_id', misionId)
+        .eq('completado', true)
+        .limit(1);
+
+      if (error) throw error;
+      return { data: (data?.length ?? 0) > 0, error: null };
+    } catch (err: any) {
+      console.error('Error al verificar intento previo:', err);
+      return { data: false, error: 'No se pudo verificar el historial.' };
+    }
+  }
+
+  async subirImagen(
+    file: File,
+    carpeta: string
+  ): Promise<{ url: string; path: string } | null> {
+    try {
+      const fileName = `${Date.now()}_${file.name}`;
+      const filePath = `${carpeta}/${fileName}`;
+
+      const { error } = await this.supabase.storage
+        .from(MULTIMEDIA.BUCKET_NAME)
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = this.supabase.storage
+        .from(MULTIMEDIA.BUCKET_NAME)
+        .getPublicUrl(filePath);
+
+      return { url: urlData.publicUrl, path: filePath };
+    } catch (err: any) {
+      console.error('Error al subir imagen:', err);
+      return null;
+    }
+  }
+
+  async eliminarArchivo(path: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabase.storage
+        .from(MULTIMEDIA.BUCKET_NAME)
+        .remove([path]);
+
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      console.error('Error al eliminar archivo:', err);
+      return false;
+    }
+  }
+
+  getPublicUrl(path: string): string {
+    const { data } = this.supabase.storage
+      .from(MULTIMEDIA.BUCKET_NAME)
+      .getPublicUrl(path);
+    return data?.publicUrl ?? '';
   }
 }

@@ -1,10 +1,12 @@
 import { Component, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { IonicModule, AlertController } from '@ionic/angular';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
+import { CalificacionService } from '../../services/calificacion.service';
+import { Pregunta, Mision, Estudiante } from '../../models/mision.model';
 
 @Component({
   selector: 'app-mission-play',
@@ -16,35 +18,37 @@ import { AuthService } from '../../services/auth';
 export class MissionPlayPage implements OnInit {
 
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private supabaseService = inject(SupabaseService);
   private authService = inject(AuthService);
+  private calificacionService = inject(CalificacionService);
+  private alertCtrl = inject(AlertController);
 
-  // Datos de la misión y estudiante
   misionId = '';
-  estudiante = signal<any>(null);
+  estudiante = signal<Estudiante | null>(null);
+  mision = signal<Mision | null>(null);
   xpRecompensa = signal<number>(0);
 
-  // Estado de la partida
   cargando = signal<boolean>(true);
-  preguntas = signal<any[]>([]);
+  preguntas = signal<Pregunta[]>([]);
   indiceActual = signal<number>(0);
   misionCompletada = signal<boolean>(false);
   guardando = signal<boolean>(false);
   mensajeError = signal<string | null>(null);
 
-  // Resultados
   respuestasCorrectas = signal<number>(0);
   totalPreguntas = signal<number>(0);
   puntajeObtenido = signal<number>(0);
   xpGanado = signal<number>(0);
+  calificacionTexto = signal<string>('');
+  calificacionColor = signal<string>('');
 
-  // Almacenamiento temporal: Guarda { "pregunta_id": "opcion_id" }
-  respuestasTemp = signal<{ [key: string]: string }>({});
+  respuestasTemp = signal<Record<string, string>>({});
+
+  yaCompletada = signal<boolean>(false);
 
   ngOnInit() {
-    // Capturamos el ID de la misión desde la URL
     const misionId = this.route.snapshot.paramMap.get('id');
-    // Leemos el estudiante desde AuthService (persistido en localStorage)
     this.estudiante.set(this.authService.obtenerSesion());
 
     if (misionId) {
@@ -65,8 +69,21 @@ export class MissionPlayPage implements OnInit {
       return;
     }
 
+    this.mision.set(data);
     this.xpRecompensa.set(data.xp_recompensa || 100);
+
+    await this.verificarIntentoPrevio();
     await this.cargarPreguntasReales(misionId);
+  }
+
+  async verificarIntentoPrevio() {
+    const est = this.estudiante();
+    if (!est) return;
+
+    const { data } = await this.supabaseService.verificarIntentoPrevio(est.id, this.misionId);
+    if (data) {
+      this.yaCompletada.set(true);
+    }
   }
 
   async cargarPreguntasReales(misionId: string) {
@@ -84,17 +101,24 @@ export class MissionPlayPage implements OnInit {
     this.cargando.set(false);
   }
 
-  get preguntaActual() {
-    return this.preguntas()[this.indiceActual()];
+  get preguntaActual(): Pregunta | null {
+    return this.preguntas()[this.indiceActual()] ?? null;
   }
 
-  get progreso() {
-    if (this.preguntas().length === 0) return 0;
-    return (this.indiceActual()) / this.preguntas().length;
+  get progreso(): number {
+    const total = this.preguntas().length;
+    if (total === 0) return 0;
+    return this.indiceActual() / total;
+  }
+
+  get esUltimaPregunta(): boolean {
+    return this.indiceActual() === this.preguntas().length - 1;
   }
 
   seleccionarRespuesta(opcionId: string) {
-    const pId = this.preguntaActual.id;
+    const pId = this.preguntaActual?.id;
+    if (!pId) return;
+
     this.respuestasTemp.update(respuestas => ({
       ...respuestas,
       [pId]: opcionId
@@ -103,47 +127,50 @@ export class MissionPlayPage implements OnInit {
 
   opcionEstaSeleccionada(opcionId: string): boolean {
     if (!this.preguntaActual) return false;
-    const pId = this.preguntaActual.id;
-    return this.respuestasTemp()[pId] === opcionId;
+    return this.respuestasTemp()[this.preguntaActual.id] === opcionId;
+  }
+
+  get respuestaActual(): string | undefined {
+    if (!this.preguntaActual) return undefined;
+    return this.respuestasTemp()[this.preguntaActual.id];
   }
 
   siguientePregunta() {
     if (this.indiceActual() < this.preguntas().length - 1) {
       this.indiceActual.update(i => i + 1);
     } else {
-      // Fin de la misión - calificar
       this.calificarYEnviar();
+    }
+  }
+
+  preguntaAnterior() {
+    if (this.indiceActual() > 0) {
+      this.indiceActual.update(i => i - 1);
     }
   }
 
   calificarYEnviar() {
     const preguntas = this.preguntas();
     const respuestas = this.respuestasTemp();
-    let correctas = 0;
 
-    // Comparar cada respuesta del estudiante con la correcta
-    for (const pregunta of preguntas) {
-      const respuestaEstudiante = respuestas[pregunta.id];
-      const opcionesCorrectas = pregunta.estructura.opciones.filter(
-        (op: any) => op.es_correcta
-      );
+    const resultado = this.calificacionService.calificar(preguntas, respuestas);
+    const xp = this.calificacionService.calcularXp(resultado.porcentaje, this.xpRecompensa());
 
-      if (respuestaEstudiante && opcionesCorrectas.some((op: any) => op.id === respuestaEstudiante)) {
-        correctas++;
-      }
-    }
+    resultado.xpGanado = xp;
 
-    const total = preguntas.length;
-    const porcentaje = total > 0 ? Math.round((correctas / total) * 100) : 0;
-    const xp = Math.round((porcentaje / 100) * this.xpRecompensa());
-
-    this.respuestasCorrectas.set(correctas);
-    this.totalPreguntas.set(total);
-    this.puntajeObtenido.set(porcentaje);
+    this.respuestasCorrectas.set(resultado.correctas);
+    this.totalPreguntas.set(resultado.total);
+    this.puntajeObtenido.set(resultado.porcentaje);
     this.xpGanado.set(xp);
+    this.calificacionTexto.set(
+      this.calificacionService.obtenerCalificacionTexto(resultado.porcentaje)
+    );
+    this.calificacionColor.set(
+      this.calificacionService.obtenerCalificacionColor(resultado.porcentaje)
+    );
 
     this.misionCompletada.set(true);
-    this.enviarRespuestas(porcentaje, xp);
+    this.enviarRespuestas(resultado.porcentaje, xp);
   }
 
   async enviarRespuestas(puntaje: number, xp: number) {
@@ -172,19 +199,49 @@ export class MissionPlayPage implements OnInit {
     this.guardando.set(false);
   }
 
-  get calificacionTexto(): string {
-    const pct = this.puntajeObtenido();
-    if (pct >= 90) return '¡Excelente!';
-    if (pct >= 70) return '¡Buen trabajo!';
-    if (pct >= 50) return 'Aprobado';
-    return 'Necesita mejorar';
+  esRespuestaCorrecta(pregunta: Pregunta): boolean {
+    const respuesta = this.respuestasTemp()[pregunta.id];
+    if (!respuesta) return false;
+    return pregunta.estructura.opciones
+      .filter(op => op.es_correcta)
+      .some(op => op.id === respuesta);
   }
 
-  get calificacionColor(): string {
-    const pct = this.puntajeObtenido();
-    if (pct >= 90) return '#10b981';
-    if (pct >= 70) return '#3b82f6';
-    if (pct >= 50) return '#f59e0b';
-    return '#ef4444';
+  esRespuestaCorrectaOpcion(opcionId: string, pregunta: Pregunta): boolean {
+    return pregunta.estructura.opciones
+      .filter(op => op.es_correcta)
+      .some(op => op.id === opcionId);
+  }
+
+  async confirmarAbandonar() {
+    const alert = await this.alertCtrl.create({
+      header: '¿Abandonar misión?',
+      message: 'Perderás tu progreso en esta misión.',
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Abandonar',
+          role: 'confirm',
+          cssClass: 'alert-danger',
+          handler: () => this.router.navigate(['/login'])
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  onImgError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
+  reiniciarMision() {
+    this.indiceActual.set(0);
+    this.respuestasTemp.set({});
+    this.misionCompletada.set(false);
+    this.yaCompletada.set(false);
+    this.respuestasCorrectas.set(0);
+    this.puntajeObtenido.set(0);
+    this.xpGanado.set(0);
   }
 }

@@ -4,6 +4,7 @@
   --color-primary: #3b82f6;
   --color-accent: #f59e0b;
   --color-success: #10b981;
+  --color-danger: #ef4444;
   --color-text: #f8fafc;
   --color-border: rgba(255, 255, 255, 0.1);
 }
@@ -21,7 +22,6 @@ ion-content {
   background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
 }
 
-/* Cabecera */
 .mission-header {
   padding: 20px;
   display: flex;
@@ -33,11 +33,17 @@ ion-content {
 
 .btn-abandon {
   background: transparent;
-  color: #ef4444;
+  color: var(--color-danger);
   border: 1px solid rgba(239, 68, 68, 0.5);
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
 }
 
 .progress-container {
@@ -59,7 +65,6 @@ ion-progress-bar {
   border-radius: 4px;
 }
 
-/* Tarjeta Principal */
 .question-card {
   flex-grow: 1;
   padding: 30px 20px;
@@ -81,6 +86,19 @@ ion-progress-bar {
   display: block;
 }
 
+.question-type-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 4px 10px;
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--color-primary);
+  border-radius: 20px;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
 .enunciado {
   font-size: 22px;
   line-height: 1.4;
@@ -88,7 +106,6 @@ ion-progress-bar {
   font-weight: 600;
 }
 
-/* Opciones */
 .options-grid {
   display: flex;
   flex-direction: column;
@@ -107,16 +124,17 @@ ion-progress-bar {
   font-size: 16px;
   text-align: left;
   transition: all 0.2s;
-}
+  cursor: pointer;
 
-.btn-option:active {
-  transform: scale(0.98);
-}
+  &:active {
+    transform: scale(0.98);
+  }
 
-.btn-option.selected {
-  background: rgba(59, 130, 246, 0.2);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  &.selected {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  }
 }
 
 .option-letter {
@@ -130,6 +148,7 @@ ion-progress-bar {
   margin-right: 15px;
   font-weight: bold;
   color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .btn-option.selected .option-letter {
@@ -137,32 +156,49 @@ ion-progress-bar {
   color: white;
 }
 
-/* Controles Inferiores */
+.option-text {
+  flex: 1;
+}
+
 .bottom-controls {
   padding: 20px;
   background: var(--color-panel);
   border-top: 1px solid var(--color-border);
 }
 
-.btn-next {
-  width: 100%;
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-nav {
+  flex: 1;
   padding: 18px;
   border-radius: 12px;
-  background: var(--color-accent);
-  color: #fff;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   border: none;
   letter-spacing: 2px;
+  cursor: pointer;
   transition: opacity 0.3s;
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 }
 
-.btn-next:disabled {
-  opacity: 0.3;
+.btn-prev {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
 }
 
-/* Pantallas extra */
-.loading-screen, .completion-screen {
+.btn-next {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.loading-screen, .completion-screen, .error-screen {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -170,6 +206,30 @@ ion-progress-bar {
   height: 100%;
   text-align: center;
   padding: 20px;
+}
+
+.error-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  color: var(--color-danger);
+  margin-bottom: 20px;
+}
+
+.btn-back {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
 }
 
 .spinner {
@@ -186,9 +246,26 @@ ion-progress-bar {
   background: var(--color-primary);
   color: white; border: none; padding: 15px 30px;
   border-radius: 12px; font-weight: bold; margin-top: 20px;
+  cursor: pointer;
 }
 
-/* Resultados */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+}
+
 .result-card {
   display: flex;
   flex-direction: column;
@@ -246,17 +323,86 @@ ion-progress-bar {
 
 .stat-item .stat-label {
   font-size: 11px;
-  color: var(--color-text-muted, #94a3b8);
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-top: 4px;
 }
 
 .summary-text {
-  color: var(--color-text-muted, #94a3b8);
+  color: #94a3b8;
   font-size: 14px;
   text-align: center;
-  margin: 0 0 10px 0;
+  margin: 0 0 20px 0;
+}
+
+.review-section {
+  width: 100%;
+  margin-top: 20px;
+  text-align: left;
+
+  h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: var(--color-text);
+    text-align: center;
+  }
+}
+
+.review-item {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-left: 4px solid;
+
+  &.correct {
+    border-color: var(--color-success);
+  }
+
+  &.incorrect {
+    border-color: var(--color-danger);
+  }
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.review-number {
+  font-weight: bold;
+  color: var(--color-primary);
+}
+
+.review-status {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.review-item.correct .review-status {
+  color: var(--color-success);
+}
+
+.review-item.incorrect .review-status {
+  color: var(--color-danger);
+}
+
+.review-question {
+  font-size: 14px;
+  margin: 0 0 5px 0;
+  color: var(--color-text);
+}
+
+.review-feedback {
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 5px 0 0 0;
 }
 
 .btn-group {
@@ -265,6 +411,7 @@ ion-progress-bar {
   gap: 10px;
   width: 100%;
   max-width: 300px;
+  margin-top: 20px;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -275,3 +422,8 @@ ion-progress-bar {
 .slide-in-right { animation: slideInRight 0.3s ease-out; }
 .fade-in { animation: fade-in 0.5s ease-in; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+:host ::ng-deep .alert-danger {
+  --background: var(--color-danger);
+  --color: white;
+}

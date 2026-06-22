@@ -5,7 +5,7 @@
     @if (!estudianteConectado()) {
       <div class="login-panel fade-in">
         <div class="logo-container">
-          <div class="icon-shield">🛡️</div>
+          <div class="icon-shield">Escudo</div>
           <h1>Academia Quest</h1>
           <p class="subtitle">Conexión con Supabase</p>
         </div>
@@ -25,7 +25,7 @@
 
         @if (mensajeError()) {
           <div class="error-message bounce">
-            ⚠️ {{ mensajeError() }}
+            {{ mensajeError() }}
           </div>
         }
 
@@ -47,13 +47,13 @@
       <div class="dashboard-panel slide-up">
         <div class="header-status">
           <div class="connection-success">
-            ✅ ¡Base de datos conectada!
+            Base de datos conectada
           </div>
           <button class="btn-logout" (click)="cerrarSesion()">Salir</button>
         </div>
 
         <div class="profile-card">
-          <div class="avatar-circle">👤</div>
+          <div class="avatar-circle">Avatar</div>
           <div class="profile-info">
             <h2>{{ estudianteConectado()?.nombre_completo }}</h2>
             <div class="tags">
@@ -65,14 +65,14 @@
 
         <div class="stats-container">
           <div class="stat-box xp-box">
-            <div class="stat-icon">⭐</div>
+            <div class="stat-icon">XP</div>
             <div class="stat-details">
               <span class="stat-label">Experiencia</span>
               <span class="stat-value">{{ estudianteConectado()?.xp }} XP</span>
             </div>
           </div>
           <div class="stat-box level-box">
-            <div class="stat-icon">🏆</div>
+            <div class="stat-icon">Nvl</div>
             <div class="stat-details">
               <span class="stat-label">Nivel Actual</span>
               <span class="stat-value">Nivel {{ estudianteConectado()?.rango_nivel }}</span>
@@ -80,24 +80,23 @@
           </div>
         </div>
 
-        <div class="missions-section" style="margin-top: 25px;">
-          <h3 style="font-size: 18px; border-left: 4px solid var(--color-primary); padding-left: 10px; margin-bottom: 15px;">Misiones Disponibles</h3>
+        <div class="missions-section">
+          <h3 class="missions-title">Misiones Disponibles</h3>
 
           @if (cargandoMisiones()) {
-            <p class="empty-state">Buscando misiones... 📡</p>
+            <p class="empty-state">Buscando misiones...</p>
           } @else if (misiones().length === 0) {
-            <p class="empty-state" style="color: var(--color-text-muted); font-style: italic; text-align: center; padding: 20px; background: rgba(0,0,0,0.1); border-radius: 8px;">No hay misiones activas para tu grado en este momento. ¡Descansa, héroe!</p>
+            <p class="empty-state no-missions">No hay misiones activas para tu grado en este momento. ¡Descansa, héroe!</p>
           } @else {
-            <div class="mission-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="mission-list">
               @for (mision of misiones(); track mision.id) {
-                <div class="mission-card" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="mission-card">
                   <div class="mission-info">
-                    <h4 style="margin: 0 0 5px 0; font-size: 16px; color: var(--color-primary);">{{ mision.titulo }}</h4>
-                    <span style="font-size: 12px; color: var(--color-accent);">Recompensa: +{{ mision.xp_recompensa }} XP</span>
+                    <h4>{{ mision.titulo }}</h4>
+                    <span class="mission-xp">Recompensa: +{{ mision.xp_recompensa }} XP</span>
                   </div>
                   <button
                     class="btn-start-mission"
-                    style="background: var(--color-success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;"
                     (click)="iniciarMision(mision.id)"
                   >
                     JUGAR

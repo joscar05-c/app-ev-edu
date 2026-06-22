@@ -75,7 +75,8 @@ export class LoginPage implements OnInit {
       }
 
       // Una vez logueado, cargamos sus misiones automáticamente
-      this.cargarMisiones(estudianteFormateado.instituciones_educativas.nivel, estudianteFormateado.grado);
+      const nivel = estudianteFormateado.instituciones_educativas?.nivel ?? 'Secundaria';
+      this.cargarMisiones(nivel, estudianteFormateado.grado);
     }
   }
 

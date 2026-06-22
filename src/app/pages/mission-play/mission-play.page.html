@@ -8,48 +8,82 @@
       </div>
     }
 
-    @if (!cargando() && !misionCompletada()) {
+    @if (!cargando() && mensajeError()) {
+      <div class="error-screen">
+        <div class="error-icon">!</div>
+        <p>{{ mensajeError() }}</p>
+        <button class="btn-back" routerLink="/login">Volver</button>
+      </div>
+    }
+
+    @if (!cargando() && !misionCompletada() && !mensajeError()) {
       <div class="mission-header">
-        <button class="btn-abandon" routerLink="/login">X Abandonar</button>
+        <button class="btn-abandon" (click)="confirmarAbandonar()">X Abandonar</button>
         <div class="progress-container">
           <span class="progress-text">Pregunta {{ indiceActual() + 1 }} de {{ preguntas().length }}</span>
           <ion-progress-bar [value]="progreso" color="warning"></ion-progress-bar>
         </div>
       </div>
 
-      <div class="question-card slide-in-right">
+      @if (preguntaActual) {
+        <div class="question-card slide-in-right">
 
-        @if (preguntaActual.multimedia?.tiene_multimedia) {
-          <div class="media-container">
-            <img [src]="preguntaActual.multimedia.url" alt="Imagen de apoyo" class="question-image"/>
-          </div>
-        }
-
-        <h2 class="enunciado">{{ preguntaActual.enunciado }}</h2>
-
-        <div class="options-grid">
-          @for (opcion of preguntaActual.estructura.opciones; track opcion.id) {
-            <button
-              class="btn-option"
-              [class.selected]="opcionEstaSeleccionada(opcion.id)"
-              (click)="seleccionarRespuesta(opcion.id)"
-            >
-              <span class="option-letter">{{ opcion.id }}</span>
-              <span class="option-text">{{ opcion.texto }}</span>
-            </button>
+          @if (preguntaActual.multimedia.tiene_multimedia) {
+            <div class="media-container">
+              <img
+                [src]="preguntaActual.multimedia.url"
+                alt="Imagen de apoyo"
+                class="question-image"
+                (error)="onImgError($event)"
+                loading="lazy"
+              />
+            </div>
           }
-        </div>
 
-      </div>
+          <div class="question-type-badge">
+            @if (preguntaActual.tipo_pregunta === 'verdadero_falso') {
+              Verdadero / Falso
+            } @else {
+              Opción Múltiple
+            }
+          </div>
+
+          <h2 class="enunciado">{{ preguntaActual.enunciado }}</h2>
+
+          <div class="options-grid">
+            @for (opcion of preguntaActual.estructura.opciones; track opcion.id) {
+              <button
+                class="btn-option"
+                [class.selected]="opcionEstaSeleccionada(opcion.id)"
+                (click)="seleccionarRespuesta(opcion.id)"
+              >
+                <span class="option-letter">{{ opcion.id }}</span>
+                <span class="option-text">{{ opcion.texto }}</span>
+              </button>
+            }
+          </div>
+
+        </div>
+      }
 
       <div class="bottom-controls">
-        <button
-          class="btn-next"
-          [disabled]="!respuestasTemp()[preguntaActual.id]"
-          (click)="siguientePregunta()"
-        >
-          {{ indiceActual() === preguntas().length - 1 ? 'FINALIZAR MISIÓN' : 'SIGUIENTE' }}
-        </button>
+        <div class="nav-buttons">
+          <button
+            class="btn-nav btn-prev"
+            [disabled]="indiceActual() === 0"
+            (click)="preguntaAnterior()"
+          >
+            ANTERIOR
+          </button>
+
+          <button
+            class="btn-nav btn-next"
+            [disabled]="!respuestaActual"
+            (click)="siguientePregunta()"
+          >
+            {{ esUltimaPregunta ? 'FINALIZAR MISIÓN' : 'SIGUIENTE' }}
+          </button>
+        </div>
       </div>
     }
 
@@ -61,19 +95,19 @@
           <p>Guardando resultados...</p>
         } @else {
           <div class="result-card">
-            <div class="trophy-icon" [style.filter]="'drop-shadow(0 0 20px ' + calificacionColor + ')'">
+            <div class="trophy-icon" [style.filter]="'drop-shadow(0 0 20px ' + calificacionColor() + ')'">
               @if (puntajeObtenido() >= 70) {
-                🏆
+                Trofeo
               } @else if (puntajeObtenido() >= 50) {
-                🎯
+                Obj
               } @else {
-                📘
+                Lib
               }
             </div>
 
-            <h1 class="result-title" [style.color]="calificacionColor">{{ calificacionTexto }}</h1>
+            <h1 class="result-title" [style.color]="calificacionColor()">{{ calificacionTexto() }}</h1>
 
-            <div class="score-circle" [style.border-color]="calificacionColor">
+            <div class="score-circle" [style.border-color]="calificacionColor()">
               <span class="score-number">{{ puntajeObtenido() }}%</span>
             </div>
 
@@ -87,8 +121,8 @@
                 <span class="stat-label">Incorrectas</span>
               </div>
               <div class="stat-item">
-                <span class="stat-value" style="color: #f59e0b;">{{ totalPreguntas() }}</span>
-                <span class="stat-label">Total</span>
+                <span class="stat-value" style="color: #f59e0b;">{{ xpGanado() }}</span>
+                <span class="stat-label">XP Ganado</span>
               </div>
             </div>
 
@@ -96,8 +130,25 @@
               Respondiste {{ respuestasCorrectas() }} de {{ totalPreguntas() }} preguntas correctamente.
             </p>
 
+            <div class="review-section">
+              <h3>Revisión de Respuestas</h3>
+              @for (pregunta of preguntas(); track pregunta.id; let i = $index) {
+                <div class="review-item" [class.correct]="esRespuestaCorrecta(pregunta)" [class.incorrect]="!esRespuestaCorrecta(pregunta)">
+                  <div class="review-header">
+                    <span class="review-number">{{ i + 1 }}</span>
+                    <span class="review-status">{{ esRespuestaCorrecta(pregunta) ? 'Correcta' : 'Incorrecta' }}</span>
+                  </div>
+                  <p class="review-question">{{ pregunta.enunciado }}</p>
+                  @if (!esRespuestaCorrecta(pregunta) && pregunta.estructura.feedback_error) {
+                    <p class="review-feedback">{{ pregunta.estructura.feedback_error }}</p>
+                  }
+                </div>
+              }
+            </div>
+
             <div class="btn-group">
               <button class="btn-primary" routerLink="/login">Volver al Cuartel</button>
+              <button class="btn-secondary" (click)="reiniciarMision()">Intentar de Nuevo</button>
             </div>
           </div>
         }
