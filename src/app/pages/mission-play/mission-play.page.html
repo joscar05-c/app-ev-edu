@@ -92,17 +92,14 @@
 
         @if (guardando()) {
           <div class="spinner"></div>
-          <p>Guardando resultados...</p>
+          <p>Calificando tu misión...</p>
         } @else {
           <div class="result-card">
+
             <div class="trophy-icon" [style.filter]="'drop-shadow(0 0 20px ' + calificacionColor() + ')'">
-              @if (puntajeObtenido() >= 70) {
-                Trofeo
-              } @else if (puntajeObtenido() >= 50) {
-                Obj
-              } @else {
-                Lib
-              }
+              @if (puntajeObtenido() >= 70) { Trofeo }
+              @else if (puntajeObtenido() >= 50) { Medalla }
+              @else { Libro }
             </div>
 
             <h1 class="result-title" [style.color]="calificacionColor()">{{ calificacionTexto() }}</h1>
@@ -113,16 +110,29 @@
 
             <div class="stats-grid">
               <div class="stat-item">
-                <span class="stat-value" style="color: #10b981;">{{ respuestasCorrectas() }}</span>
+                <span class="stat-value correct-color">{{ respuestasCorrectas() }}</span>
                 <span class="stat-label">Correctas</span>
               </div>
               <div class="stat-item">
-                <span class="stat-value" style="color: #ef4444;">{{ totalPreguntas() - respuestasCorrectas() }}</span>
+                <span class="stat-value incorrect-color">{{ totalPreguntas() - respuestasCorrectas() }}</span>
                 <span class="stat-label">Incorrectas</span>
               </div>
               <div class="stat-item">
-                <span class="stat-value" style="color: #f59e0b;">{{ xpGanado() }}</span>
+                <span class="stat-value xp-color">{{ xpGanado() }}</span>
                 <span class="stat-label">XP Ganado</span>
+              </div>
+            </div>
+
+            <div class="progress-summary">
+              <div class="progress-row">
+                <span class="progress-label">Acierto</span>
+                <ion-progress-bar [value]="progresoCorrectas" color="success"></ion-progress-bar>
+                <span class="progress-value">{{ respuestasCorrectas() }}/{{ totalPreguntas() }}</span>
+              </div>
+              <div class="progress-row">
+                <span class="progress-label">XP</span>
+                <ion-progress-bar [value]="progresoXp" color="warning"></ion-progress-bar>
+                <span class="progress-value">{{ xpGanado() }}/{{ xpRecompensa() }}</span>
               </div>
             </div>
 
@@ -132,15 +142,47 @@
 
             <div class="review-section">
               <h3>Revisión de Respuestas</h3>
+
               @for (pregunta of preguntas(); track pregunta.id; let i = $index) {
-                <div class="review-item" [class.correct]="esRespuestaCorrecta(pregunta)" [class.incorrect]="!esRespuestaCorrecta(pregunta)">
+                <div class="review-item"
+                  [class.correct]="esRespuestaCorrecta(pregunta)"
+                  [class.incorrect]="!esRespuestaCorrecta(pregunta)">
+
                   <div class="review-header">
                     <span class="review-number">{{ i + 1 }}</span>
-                    <span class="review-status">{{ esRespuestaCorrecta(pregunta) ? 'Correcta' : 'Incorrecta' }}</span>
+                    <span class="review-status">
+                      {{ esRespuestaCorrecta(pregunta) ? 'Correcta' : 'Incorrecta' }}
+                    </span>
                   </div>
+
                   <p class="review-question">{{ pregunta.enunciado }}</p>
+
+                  <div class="review-options">
+                    @for (opcion of pregunta.estructura.opciones; track opcion.id) {
+                      <div class="review-option"
+                        [class.selected-wrong]="!esRespuestaCorrecta(pregunta) && esSeleccionadaEnRespuesta(opcion.id, pregunta.id)"
+                        [class.correct-answer]="esCorrectaEnRespuesta(opcion.id, pregunta)">
+                        <span class="review-option-letter"
+                          [class.letter-wrong]="!esRespuestaCorrecta(pregunta) && esSeleccionadaEnRespuesta(opcion.id, pregunta.id)"
+                          [class.letter-correct]="esCorrectaEnRespuesta(opcion.id, pregunta)">
+                          {{ opcion.id }}
+                        </span>
+                        <span class="review-option-text">{{ opcion.texto }}</span>
+                        @if (esSeleccionadaEnRespuesta(opcion.id, pregunta.id)) {
+                          <span class="review-badge badge-selected">Tu respuesta</span>
+                        }
+                        @if (esCorrectaEnRespuesta(opcion.id, pregunta)) {
+                          <span class="review-badge badge-correct">Correcta</span>
+                        }
+                      </div>
+                    }
+                  </div>
+
                   @if (!esRespuestaCorrecta(pregunta) && pregunta.estructura.feedback_error) {
-                    <p class="review-feedback">{{ pregunta.estructura.feedback_error }}</p>
+                    <div class="review-feedback-box">
+                      <span class="feedback-icon">💡</span>
+                      <p class="review-feedback">{{ pregunta.estructura.feedback_error }}</p>
+                    </div>
                   }
                 </div>
               }

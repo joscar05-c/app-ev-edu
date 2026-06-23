@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-import { Mision, Pregunta, IntentoMision, Estudiante } from '../models/mision.model';
+import { Mision, Pregunta, Estudiante, ResultadoCalificacionRPC } from '../models/mision.model';
 import { MULTIMEDIA } from '../config/game.config';
 
 interface SupabaseResponse<T> {
-  data: T;
+  data: T | null;
   error: string | null;
 }
 
@@ -113,25 +113,28 @@ export class SupabaseService {
     }
   }
 
-  async guardarIntentoMision(intentoData: IntentoMision): Promise<{ success: boolean; error: string | null }> {
+  async calificarMision(
+    estudianteId: string,
+    misionId: string,
+    respuestas: Record<string, string>
+  ): Promise<SupabaseResponse<ResultadoCalificacionRPC>> {
     try {
-      const { error } = await this.supabase
-        .from('intentos_misiones')
-        .insert({
-          estudiante_id: intentoData.estudiante_id,
-          mision_id: intentoData.mision_id,
-          respuestas: intentoData.respuestas,
-          puntaje_total: intentoData.puntaje_total,
-          xp_ganado: intentoData.xp_ganado,
-          completado: true,
-          finalizado_en: new Date().toISOString()
-        });
+      const { data, error } = await this.supabase.rpc('calificar_mision', {
+        p_estudiante_id: estudianteId,
+        p_mision_id: misionId,
+        p_respuestas: respuestas
+      });
 
       if (error) throw error;
-      return { success: true, error: null };
+
+      if (!data) {
+        return { data: null, error: 'No se pudo calificar la misión.' };
+      }
+
+      return { data, error: null };
     } catch (err: any) {
-      console.error('Error al guardar intento:', err);
-      return { success: false, error: err.message };
+      console.error('Error al calificar misión:', err);
+      return { data: null, error: 'Error al procesar la calificación.' };
     }
   }
 

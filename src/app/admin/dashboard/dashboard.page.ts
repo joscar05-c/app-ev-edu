@@ -44,7 +44,7 @@ export class DashboardPage implements OnInit {
     if (error) {
       this.mensajeError.set(error);
     } else {
-      this.misiones.set(data);
+      this.misiones.set(data ?? []);
     }
   }
 

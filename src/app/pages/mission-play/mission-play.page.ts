@@ -6,7 +6,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
 import { CalificacionService } from '../../services/calificacion.service';
-import { Pregunta, Mision, Estudiante } from '../../models/mision.model';
+import { Pregunta, Mision, Estudiante, DetalleRespuesta } from '../../models/mision.model';
 
 @Component({
   selector: 'app-mission-play',
@@ -44,6 +44,7 @@ export class MissionPlayPage implements OnInit {
   calificacionColor = signal<string>('');
 
   respuestasTemp = signal<Record<string, string>>({});
+  detalleRespuestas = signal<DetalleRespuesta[]>([]);
 
   yaCompletada = signal<boolean>(false);
 
@@ -91,7 +92,7 @@ export class MissionPlayPage implements OnInit {
 
     if (error) {
       this.mensajeError.set(error);
-    } else if (data.length === 0) {
+    } else if (!data || data.length === 0) {
       this.mensajeError.set('Esta misión no tiene preguntas configuradas.');
     } else {
       this.preguntas.set(data);
@@ -149,51 +150,42 @@ export class MissionPlayPage implements OnInit {
     }
   }
 
-  calificarYEnviar() {
-    const preguntas = this.preguntas();
-    const respuestas = this.respuestasTemp();
-
-    const resultado = this.calificacionService.calificar(preguntas, respuestas);
-    const xp = this.calificacionService.calcularXp(resultado.porcentaje, this.xpRecompensa());
-
-    resultado.xpGanado = xp;
-
-    this.respuestasCorrectas.set(resultado.correctas);
-    this.totalPreguntas.set(resultado.total);
-    this.puntajeObtenido.set(resultado.porcentaje);
-    this.xpGanado.set(xp);
-    this.calificacionTexto.set(
-      this.calificacionService.obtenerCalificacionTexto(resultado.porcentaje)
-    );
-    this.calificacionColor.set(
-      this.calificacionService.obtenerCalificacionColor(resultado.porcentaje)
-    );
+  async calificarYEnviar() {
+    const est = this.estudiante();
+    if (!est) return;
 
     this.misionCompletada.set(true);
-    this.enviarRespuestas(resultado.porcentaje, xp);
-  }
-
-  async enviarRespuestas(puntaje: number, xp: number) {
     this.guardando.set(true);
 
-    const est = this.estudiante();
-    if (!est) {
+    const { data, error } = await this.supabaseService.calificarMision(
+      est.id,
+      this.misionId,
+      this.respuestasTemp()
+    );
+
+    if (error || !data) {
+      this.mensajeError.set(error || 'Error al calificar.');
       this.guardando.set(false);
       return;
     }
 
-    const intentoData = {
-      estudiante_id: est.id,
-      mision_id: this.misionId,
-      respuestas: this.respuestasTemp(),
-      puntaje_total: puntaje,
-      xp_ganado: xp
-    };
+    this.respuestasCorrectas.set(data.correctas);
+    this.totalPreguntas.set(data.total);
+    this.puntajeObtenido.set(data.porcentaje);
+    this.xpGanado.set(data.xp_ganado);
+    this.detalleRespuestas.set(data.detalle);
 
-    const { success, error } = await this.supabaseService.guardarIntentoMision(intentoData);
+    this.calificacionTexto.set(
+      this.calificacionService.obtenerCalificacionTexto(data.porcentaje)
+    );
+    this.calificacionColor.set(
+      this.calificacionService.obtenerCalificacionColor(data.porcentaje)
+    );
 
-    if (!success) {
-      console.error('Error al guardar intento:', error);
+    const sesion = this.authService.obtenerSesion();
+    if (sesion) {
+      sesion.xp = (sesion.xp || 0) + data.xp_ganado;
+      this.authService.guardarSesion(sesion);
     }
 
     this.guardando.set(false);
@@ -207,10 +199,31 @@ export class MissionPlayPage implements OnInit {
       .some(op => op.id === respuesta);
   }
 
-  esRespuestaCorrectaOpcion(opcionId: string, pregunta: Pregunta): boolean {
+  esSeleccionadaEnRespuesta(opcionId: string, preguntaId: string): boolean {
+    return this.respuestasTemp()[preguntaId] === opcionId;
+  }
+
+  esCorrectaEnRespuesta(opcionId: string, pregunta: Pregunta): boolean {
     return pregunta.estructura.opciones
       .filter(op => op.es_correcta)
       .some(op => op.id === opcionId);
+  }
+
+  obtenerTextoOpcion(pregunta: Pregunta, opcionId: string): string {
+    const opcion = pregunta.estructura.opciones.find(op => op.id === opcionId);
+    return opcion?.texto ?? opcionId;
+  }
+
+  get progresoCorrectas(): number {
+    const total = this.totalPreguntas();
+    if (total === 0) return 0;
+    return this.respuestasCorrectas() / total;
+  }
+
+  get progresoXp(): number {
+    const max = this.xpRecompensa();
+    if (max === 0) return 0;
+    return this.xpGanado() / max;
   }
 
   async confirmarAbandonar() {
@@ -240,6 +253,7 @@ export class MissionPlayPage implements OnInit {
     this.respuestasTemp.set({});
     this.misionCompletada.set(false);
     this.yaCompletada.set(false);
+    this.detalleRespuestas.set([]);
     this.respuestasCorrectas.set(0);
     this.puntajeObtenido.set(0);
     this.xpGanado.set(0);

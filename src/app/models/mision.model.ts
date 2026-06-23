@@ -74,3 +74,19 @@ export interface ResultadoCalificacion {
   porcentaje: number;
   xpGanado: number;
 }
+
+export interface DetalleRespuesta {
+  pregunta_id: string;
+  respuesta_usuario: { opcion_id: string };
+  es_correcta: boolean;
+  puntaje_asignado: number;
+}
+
+export interface ResultadoCalificacionRPC {
+  intento_id: string;
+  correctas: number;
+  total: number;
+  porcentaje: number;
+  xp_ganado: number;
+  detalle: DetalleRespuesta[];
+}
