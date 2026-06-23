@@ -236,4 +236,49 @@ export class SupabaseService {
       .getPublicUrl(path);
     return data?.publicUrl ?? '';
   }
+
+  async actualizarPerfil(
+    estudianteId: string,
+    datos: { avatar_url?: string; titulo_actual?: string }
+  ): Promise<SupabaseResponse<Estudiante>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('estudiantes')
+        .update(datos)
+        .eq('id', estudianteId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data, error: null };
+    } catch (err: any) {
+      console.error('Error al actualizar perfil:', err);
+      return { data: null, error: 'No se pudo actualizar el perfil.' };
+    }
+  }
+
+  async subirAvatar(
+    file: File,
+    estudianteId: string
+  ): Promise<SupabaseResponse<string>> {
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${estudianteId}.${ext}`;
+
+      const { error } = await this.supabase.storage
+        .from(MULTIMEDIA.AVATAR_BUCKET)
+        .upload(filePath, file, { upsert: true });
+
+      if (error) throw error;
+
+      const { data: urlData } = this.supabase.storage
+        .from(MULTIMEDIA.AVATAR_BUCKET)
+        .getPublicUrl(filePath);
+
+      return { data: urlData.publicUrl, error: null };
+    } catch (err: any) {
+      console.error('Error al subir avatar:', err);
+      return { data: null, error: 'No se pudo subir la imagen.' };
+    }
+  }
 }

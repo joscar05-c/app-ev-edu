@@ -199,4 +199,21 @@
     }
 
   </div>
+
+  @if (mostrarLevelUp() && nivelGanado()) {
+    <div class="levelup-overlay fade-in" (click)="cerrarLevelUp()">
+      <div class="levelup-card" (click)="$event.stopPropagation()">
+        <div class="levelup-particles">
+          <span class="particle">✨</span>
+          <span class="particle">⭐</span>
+          <span class="particle">✨</span>
+        </div>
+        <div class="levelup-emoji">{{ nivelGanado()?.emoji }}</div>
+        <h2 class="levelup-title">¡SUBISTE DE NIVEL!</h2>
+        <p class="levelup-name">{{ nivelGanado()?.nombre }}</p>
+        <p class="levelup-number">Nivel {{ nivelGanado()?.nivel }}</p>
+        <button class="btn-levelup" (click)="cerrarLevelUp()">¡Genial!</button>
+      </div>
+    </div>
+  }
 </ion-content>

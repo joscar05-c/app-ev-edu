@@ -1,0 +1,102 @@
+<ion-content [fullscreen]="true">
+  <div class="profile-container">
+    <div class="background-overlay"></div>
+
+    <div class="profile-panel fade-in">
+      <div class="panel-header">
+        <button class="btn-back" (click)="volverAlCuartel()">← Volver</button>
+        <h1>Mi Perfil</h1>
+      </div>
+
+      @if (estudiante()) {
+        <div class="avatar-section">
+          @if (estudiante()?.avatar_url) {
+            <img class="avatar-img" [src]="estudiante()?.avatar_url" alt="Avatar">
+          } @else {
+            <div class="avatar-circle">{{ getIniciales() }}</div>
+          }
+
+          <label class="btn-upload" for="avatar-input">
+            @if (subiendoAvatar()) {
+              <span class="spinner-sm"></span> Subiendo...
+            } @else {
+              Cambiar Avatar
+            }
+          </label>
+          <input
+            type="file"
+            id="avatar-input"
+            accept="image/*"
+            (change)="onAvatarSelected($event)"
+            hidden
+            [disabled]="subiendoAvatar()"
+          >
+        </div>
+
+        @if (mensajeExito()) {
+          <div class="success-message">{{ mensajeExito() }}</div>
+        }
+        @if (mensajeError()) {
+          <div class="error-message">{{ mensajeError() }}</div>
+        }
+
+        <div class="info-card">
+          <h3>Datos Personales</h3>
+          <div class="info-row">
+            <span class="info-label">Nombre</span>
+            <span class="info-value">{{ estudiante()?.nombre_completo }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">DNI</span>
+            <span class="info-value">{{ estudiante()?.dni }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Grado y Sección</span>
+            <span class="info-value">{{ estudiante()?.grado }}° "{{ estudiante()?.seccion }}"</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Institución</span>
+            <span class="info-value">{{ estudiante()?.instituciones_educativas?.nombre }}</span>
+          </div>
+        </div>
+
+        @if (nivelActual()) {
+          <div class="level-card">
+            <div class="level-header">
+              <span class="level-emoji">{{ nivelActual()?.emoji }}</span>
+              <div class="level-info">
+                <span class="level-name">{{ nivelActual()?.nombre }}</span>
+                <span class="level-number">Nivel {{ nivelActual()?.nivel }}</span>
+              </div>
+              <span class="xp-total">{{ estudiante()?.xp }} XP</span>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar" [style.width.%]="progresoNivel() * 100"></div>
+            </div>
+            <span class="xp-detail">{{ estudiante()?.xp }} / {{ xpSiguienteNivel() }} XP para siguiente nivel</span>
+          </div>
+        }
+
+        <div class="titles-card">
+          <h3>Mis Títulos</h3>
+          <p class="titles-hint">Selecciona un título que hayas desbloqueado</p>
+          <div class="titles-grid">
+            @for (titulo of titulosDisponibles(); track titulo.titulo) {
+              <button
+                class="title-chip"
+                [class.active]="estudiante()?.titulo_actual === titulo.titulo"
+                (click)="seleccionarTitulo(titulo.titulo)"
+                [disabled]="guardando()"
+              >
+                {{ titulo.titulo }}
+              </button>
+            }
+            @if (titulosDisponibles().length === 0) {
+              <p class="no-titles">Aún no has desbloqueado títulos. ¡Sigue ganando XP!</p>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</ion-content>

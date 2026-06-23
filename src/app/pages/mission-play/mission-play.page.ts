@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, inject } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, AlertController } from '@ionic/angular';
@@ -6,7 +6,9 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
 import { CalificacionService } from '../../services/calificacion.service';
+import { GamificacionService } from '../../services/gamificacion.service';
 import { Pregunta, Mision, Estudiante, DetalleRespuesta } from '../../models/mision.model';
+import { NivelConfig } from '../../config/game.config';
 
 @Component({
   selector: 'app-mission-play',
@@ -22,6 +24,7 @@ export class MissionPlayPage implements OnInit {
   private supabaseService = inject(SupabaseService);
   private authService = inject(AuthService);
   private calificacionService = inject(CalificacionService);
+  private gamificacionService = inject(GamificacionService);
   private alertCtrl = inject(AlertController);
 
   misionId = '';
@@ -47,6 +50,10 @@ export class MissionPlayPage implements OnInit {
   detalleRespuestas = signal<DetalleRespuesta[]>([]);
 
   yaCompletada = signal<boolean>(false);
+
+  mostrarLevelUp = signal<boolean>(false);
+  nivelGanado = signal<NivelConfig | null>(null);
+  xpTotalAntes = signal<number>(0);
 
   ngOnInit() {
     const misionId = this.route.snapshot.paramMap.get('id');
@@ -184,7 +191,21 @@ export class MissionPlayPage implements OnInit {
 
     const sesion = this.authService.obtenerSesion();
     if (sesion) {
-      sesion.xp = (sesion.xp || 0) + data.xp_ganado;
+      const xpAnterior = sesion.xp || 0;
+      this.xpTotalAntes.set(xpAnterior);
+
+      const nivelAnterior = this.gamificacionService.obtenerNivelPorXp(xpAnterior);
+
+      sesion.xp = xpAnterior + data.xp_ganado;
+
+      const nivelNuevo = this.gamificacionService.obtenerNivelPorXp(sesion.xp);
+
+      if (nivelNuevo.nivel > nivelAnterior.nivel) {
+        this.nivelGanado.set(nivelNuevo);
+        setTimeout(() => this.mostrarLevelUp.set(true), 500);
+      }
+
+      sesion.rango_nivel = nivelNuevo.nivel;
       this.authService.guardarSesion(sesion);
     }
 
@@ -257,5 +278,11 @@ export class MissionPlayPage implements OnInit {
     this.respuestasCorrectas.set(0);
     this.puntajeObtenido.set(0);
     this.xpGanado.set(0);
+    this.mostrarLevelUp.set(false);
+    this.nivelGanado.set(null);
+  }
+
+  cerrarLevelUp() {
+    this.mostrarLevelUp.set(false);
   }
 }

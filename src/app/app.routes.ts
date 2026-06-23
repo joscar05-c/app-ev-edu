@@ -31,4 +31,9 @@ export const routes: Routes = [
     canMatch: [adminGuard],
     loadComponent: () => import('./admin/crear-mision/crear-mision.page').then( m => m.CrearMisionPage)
   },
+  {
+    path: 'profile',
+    canMatch: [authGuard],
+    loadComponent: () => import('./pages/profile/profile.page').then( m => m.ProfilePage)
+  },
 ];

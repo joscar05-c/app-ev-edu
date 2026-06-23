@@ -53,15 +53,36 @@
         </div>
 
         <div class="profile-card">
-          <div class="avatar-circle">Avatar</div>
+          @if (estudianteConectado()?.avatar_url) {
+            <img class="avatar-img" [src]="estudianteConectado()?.avatar_url" alt="Avatar">
+          } @else {
+            <div class="avatar-circle">{{ getIniciales() }}</div>
+          }
           <div class="profile-info">
             <h2>{{ estudianteConectado()?.nombre_completo }}</h2>
             <div class="tags">
               <span class="tag grade">{{ estudianteConectado()?.grado }}° "{{ estudianteConectado()?.seccion }}"</span>
               <span class="tag school">{{ estudianteConectado()?.instituciones_educativas?.nombre }}</span>
             </div>
+            @if (estudianteConectado()?.titulo_actual) {
+              <span class="tag title-tag">{{ estudianteConectado()?.titulo_actual }}</span>
+            }
           </div>
         </div>
+
+        @if (nivelActual()) {
+          <div class="level-progress-section">
+            <div class="level-header">
+              <span class="level-emoji">{{ nivelActual()?.emoji }}</span>
+              <span class="level-name">{{ nivelActual()?.nombre }}</span>
+              <span class="level-number">Nivel {{ nivelActual()?.nivel }}</span>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar" [style.width.%]="progresoNivel() * 100"></div>
+            </div>
+            <span class="xp-detail">{{ estudianteConectado()?.xp }} / {{ xpSiguienteNivel() }} XP</span>
+          </div>
+        }
 
         <div class="stats-container">
           <div class="stat-box xp-box">
@@ -79,6 +100,10 @@
             </div>
           </div>
         </div>
+
+        <button class="btn-profile" (click)="irAlPerfil()">
+          Mi Perfil
+        </button>
 
         <div class="missions-section">
           <h3 class="missions-title">Misiones Disponibles</h3>

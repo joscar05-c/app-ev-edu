@@ -1,10 +1,12 @@
-import { Component, signal, inject, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
+import { GamificacionService } from '../../services/gamificacion.service';
+import { Estudiante } from '../../models/mision.model';
 
 @Component({
   selector: 'app-login',
@@ -16,20 +18,36 @@ import { AuthService } from '../../services/auth';
 export class LoginPage implements OnInit {
   private supabaseService = inject(SupabaseService);
   private authService = inject(AuthService);
+  private gamificacionService = inject(GamificacionService);
   private router = inject(Router);
 
-  // Manejo de estado del estudiante
   dniInput = signal<string>('');
   cargando = signal<boolean>(false);
   mensajeError = signal<string | null>(null);
-  estudianteConectado = signal<any | null>(null);
+  estudianteConectado = signal<Estudiante | null>(null);
 
-  // Manejo de estado de las misiones
   misiones = signal<any[]>([]);
   cargandoMisiones = signal<boolean>(false);
 
+  nivelActual = computed(() => {
+    const est = this.estudianteConectado();
+    if (!est) return null;
+    return this.gamificacionService.obtenerNivelPorXp(est.xp);
+  });
+
+  progresoNivel = computed(() => {
+    const est = this.estudianteConectado();
+    if (!est) return 0;
+    return this.gamificacionService.obtenerProgresoNivel(est.xp);
+  });
+
+  xpSiguienteNivel = computed(() => {
+    const est = this.estudianteConectado();
+    if (!est) return 0;
+    return this.gamificacionService.obtenerXpParaSiguienteNivel(est.xp);
+  });
+
   ngOnInit() {
-    // Si ya tiene sesión, restaurar estado
     const sesion = this.authService.obtenerSesion();
     if (sesion) {
       this.estudianteConectado.set(sesion);
@@ -55,26 +73,21 @@ export class LoginPage implements OnInit {
     }
 
     if (data) {
-      // Formateamos la data si viene del RPC
-      const estudianteFormateado = {
+      const estudianteFormateado: Estudiante = {
         ...data,
         instituciones_educativas: {
-          nombre: data.ie_nombre,
-          nivel: data.ie_nivel
+          nombre: data.ie_nombre ?? '',
+          nivel: data.ie_nivel ?? ''
         }
       };
       this.estudianteConectado.set(estudianteFormateado);
-
-      // Persistir sesión
       this.authService.guardarSesion(estudianteFormateado);
 
-      // Si es admin, redirigir al dashboard admin
       if (estudianteFormateado.rol === 'admin') {
         this.router.navigate(['/admin/dashboard']);
         return;
       }
 
-      // Una vez logueado, cargamos sus misiones automáticamente
       const nivel = estudianteFormateado.instituciones_educativas?.nivel ?? 'Secundaria';
       this.cargarMisiones(nivel, estudianteFormateado.grado);
     }
@@ -103,7 +116,20 @@ export class LoginPage implements OnInit {
   }
 
   iniciarMision(misionId: string) {
-    // La sesión ya está en AuthService, mission-play la leerá de ahí
     this.router.navigate(['/mission-play', misionId]);
+  }
+
+  irAlPerfil() {
+    this.router.navigate(['/profile']);
+  }
+
+  getIniciales(): string {
+    const est = this.estudianteConectado();
+    if (!est) return '?';
+    const partes = est.nombre_completo.split(' ');
+    if (partes.length >= 2) {
+      return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+    return est.nombre_completo.substring(0, 2).toUpperCase();
   }
 }

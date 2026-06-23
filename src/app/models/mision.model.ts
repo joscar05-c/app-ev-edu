@@ -58,6 +58,8 @@ export interface Estudiante {
   instituciones_educativas: InstitucionEducativa;
   ie_nombre?: string;
   ie_nivel?: string;
+  avatar_url?: string;
+  titulo_actual?: string;
 }
 
 export interface IntentoMision {
