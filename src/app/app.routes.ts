@@ -49,16 +49,20 @@ export const routes: Routes = [
         loadComponent: () => import('./admin/crear-mision/crear-mision.page').then(m => m.CrearMisionPage)
       },
       {
-        path: 'configurar-examen/:id',
-        loadComponent: () => import('./admin/configurar-examen/configurar-examen.page').then(m => m.ConfigurarExamenPage)
-      },
-      {
         path: 'estudiantes',
         loadComponent: () => import('./admin/estudiantes/estudiantes.page').then(m => m.EstudiantesPage)
       },
       {
         path: 'instituciones',
         loadComponent: () => import('./admin/instituciones/instituciones.page').then(m => m.InstitucionesPage)
+      },
+      {
+        path: 'usuarios',
+        loadComponent: () => import('./admin/usuarios/usuarios.page').then(m => m.UsuariosPage)
+      },
+      {
+        path: 'materias',
+        loadComponent: () => import('./admin/materias/materias.page').then(m => m.MateriasPage)
       },
     ]
   },

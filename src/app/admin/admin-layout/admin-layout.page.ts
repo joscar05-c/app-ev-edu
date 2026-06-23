@@ -1,8 +1,9 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { RouterModule, Router, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth';
+import { ThemeService } from '../../services/theme.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -14,16 +15,26 @@ import { AuthService } from '../../services/auth';
 export class AdminLayoutPage {
   private authService = inject(AuthService);
   private router = inject(Router);
+  themeService = inject(ThemeService);
 
   admin = signal<any>(null);
-  sidebarAbierto = signal<boolean>(true);
+  sidebarAbierto = signal<boolean>(window.innerWidth > 768);
 
   menuItems = [
     { label: 'Dashboard', icon: '📊', route: '/admin/dashboard' },
     { label: 'Misiones', icon: '📋', route: '/admin/misiones' },
+    { label: 'Usuarios', icon: '👤', route: '/admin/usuarios' },
     { label: 'Estudiantes', icon: '👥', route: '/admin/estudiantes' },
     { label: 'Instituciones', icon: '🏫', route: '/admin/instituciones' },
+    { label: 'Materias', icon: '📚', route: '/admin/materias' },
   ];
+
+  constructor() {
+    effect(() => {
+      const mode = this.themeService.theme();
+      document.documentElement.setAttribute('data-admin-theme', mode);
+    });
+  }
 
   ngOnInit() {
     this.admin.set(this.authService.obtenerSesion());
@@ -39,7 +50,7 @@ export class AdminLayoutPage {
   }
 
   isActive(route: string): boolean {
-    return this.router.url === route;
+    return this.router.url.startsWith(route);
   }
 
   onNavClick() {

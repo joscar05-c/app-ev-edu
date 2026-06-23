@@ -1,6 +1,6 @@
 <ion-content [fullscreen]="true" class="admin-bg">
-  <div class="admin-shell">
-    <aside class="sidebar" [class.collapsed]="!sidebarAbierto()">
+  <div class="admin-shell" [class.dark]="themeService.isDark()">
+    <aside class="sidebar" [class.collapsed]="!sidebarAbierto()" [class.mobile-open]="sidebarAbierto()">
       <div class="sidebar-header">
         <span class="logo-text" *ngIf="sidebarAbierto()">Admin Panel</span>
         <button class="btn-toggle" (click)="toggleSidebar()">☰</button>
@@ -21,6 +21,13 @@
       </nav>
 
       <div class="sidebar-footer">
+        <button class="btn-theme" (click)="themeService.toggle()" [title]="themeService.isDark() ? 'Modo claro' : 'Modo oscuro'">
+          <span class="nav-icon">{{ themeService.isDark() ? '☀️' : '🌙' }}</span>
+          @if (sidebarAbierto()) {
+            <span class="nav-label">{{ themeService.isDark() ? 'Modo Claro' : 'Modo Oscuro' }}</span>
+          }
+        </button>
+
         @if (sidebarAbierto()) {
           <div class="admin-info">
             <span class="admin-name">{{ admin()?.nombre_completo }}</span>
@@ -36,8 +43,16 @@
       </div>
     </aside>
 
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
+    <div class="sidebar-backdrop" [class.visible]="sidebarAbierto()" (click)="toggleSidebar()"></div>
+
+    <div class="main-wrapper">
+      <header class="top-bar">
+        <button class="btn-hamburger" (click)="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Admin Panel</span>
+      </header>
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
   </div>
 </ion-content>

@@ -9,8 +9,13 @@ export class CalificacionService {
 
   calificar(preguntas: Pregunta[], respuestas: Record<string, string>): ResultadoCalificacion {
     let correctas = 0;
+    let puntajeObtenido = 0;
+    let puntajeTotal = 0;
 
     for (const pregunta of preguntas) {
+      const puntajePregunta = pregunta.puntaje || 1;
+      puntajeTotal += puntajePregunta;
+
       const respuestaEstudiante = respuestas[pregunta.id];
       if (!respuestaEstudiante) continue;
 
@@ -19,11 +24,12 @@ export class CalificacionService {
 
       if (opcionesCorrectas.some(op => op.id === respuestaEstudiante)) {
         correctas++;
+        puntajeObtenido += puntajePregunta;
       }
     }
 
     const total = preguntas.length;
-    const porcentaje = total > 0 ? Math.round((correctas / total) * 100) : 0;
+    const porcentaje = puntajeTotal > 0 ? Math.round((puntajeObtenido / puntajeTotal) * 100) : 0;
 
     return {
       correctas,

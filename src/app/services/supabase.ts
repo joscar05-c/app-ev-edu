@@ -85,6 +85,7 @@ export class SupabaseService {
           grado: misionData.grado,
           xp_recompensa: misionData.xp_recompensa,
           max_intentos: misionData.max_intentos || 1,
+          configuracion_examen: misionData.configuracion_examen ?? null,
           activo: true
         })
         .select()
@@ -99,6 +100,7 @@ export class SupabaseService {
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
         materia: p.materia || '',
+        puntaje: p.puntaje || 1,
         estructura: p.estructura
       }));
 
@@ -298,7 +300,8 @@ export class SupabaseService {
           nivel_educativo: misionData.nivel_educativo,
           grado: misionData.grado,
           xp_recompensa: misionData.xp_recompensa,
-          max_intentos: misionData.max_intentos || 1
+          max_intentos: misionData.max_intentos || 1,
+          configuracion_examen: misionData.configuracion_examen ?? null
         })
         .eq('id', misionId);
 
@@ -316,6 +319,7 @@ export class SupabaseService {
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
         materia: p.materia || '',
+        puntaje: p.puntaje || 1,
         estructura: p.estructura
       }));
 
@@ -367,6 +371,53 @@ export class SupabaseService {
     } catch (err: any) {
       console.error('Error al cambiar estado:', err);
       return { success: false, error: err.message };
+    }
+  }
+
+  seleccionarPreguntasPorDistribucion(
+    todasLasPreguntas: Pregunta[],
+    configuracion: { total: number; distribucion: Record<string, number> }
+  ): Pregunta[] {
+    const seleccionadas: Pregunta[] = [];
+
+    for (const [materia, cantidad] of Object.entries(configuracion.distribucion)) {
+      if (cantidad <= 0) continue;
+      const disponibles = todasLasPreguntas.filter(p => (p.materia || '') === materia);
+      const shuffled = this.shuffleArray([...disponibles]);
+      seleccionadas.push(...shuffled.slice(0, cantidad));
+    }
+
+    if (seleccionadas.length < configuracion.total) {
+      const idsSeleccionados = new Set(seleccionadas.map(p => p.id));
+      const sobrantes = this.shuffleArray(
+        todasLasPreguntas.filter(p => !idsSeleccionados.has(p.id))
+      );
+      seleccionadas.push(...sobrantes.slice(0, configuracion.total - seleccionadas.length));
+    }
+
+    return this.shuffleArray(seleccionadas);
+  }
+
+  private shuffleArray<T>(array: T[]): T[] {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  async obtenerMaterias(): Promise<SupabaseResponse<{ id: string; nombre: string }[]>> {
+    try {
+      const { data, error } = await this.supabase
+        .from('materias')
+        .select('id, nombre')
+        .eq('activa', true)
+        .order('nombre');
+      if (error) throw error;
+      return { data: data || [], error: null };
+    } catch (err: any) {
+      console.error('Error al cargar materias:', err);
+      return { data: [], error: 'No se pudieron cargar las materias.' };
     }
   }
 }

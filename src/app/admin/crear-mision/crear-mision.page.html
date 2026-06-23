@@ -65,8 +65,44 @@
       </div>
     </div>
 
+    @if (materias().length > 0) {
+      <div class="form-card distribution-card">
+        <h2 class="card-title">2. Configuración del Examen</h2>
+        <p class="hint">Define el total de preguntas, el puntaje y la distribución por materia.</p>
+
+        <div class="exam-config-grid">
+          <div class="input-group">
+            <label>Total de preguntas</label>
+            <input type="number" [ngModel]="totalPreguntas()" (ngModelChange)="totalPreguntas.set($event)" min="1" max="50">
+          </div>
+          <div class="input-group">
+            <label>Puntaje total (pts)</label>
+            <input type="number" [ngModel]="puntajeTotal()" (ngModelChange)="puntajeTotal.set($event)" min="1" max="1000" step="5">
+          </div>
+        </div>
+
+        <label class="sub-label">Distribución por materia</label>
+        <div class="distribucion-grid">
+          @for (m of materias(); track m.id) {
+            <div class="distribucion-item" [class.agotada]="(distribucionContadores()[m.nombre] || 0) >= totalPreguntas()">
+              <span class="dist-name">{{ m.nombre }}</span>
+              <div class="dist-controls">
+                <button class="btn-qty" (click)="ajustar(m.nombre, -1)" [disabled]="(distribucionContadores()[m.nombre] || 0) <= 0">−</button>
+                <span class="qty-value">{{ distribucionContadores()[m.nombre] || 0 }}</span>
+                <button class="btn-qty" (click)="ajustar(m.nombre, 1)" [disabled]="sumarDistribucion() >= totalPreguntas()">+</button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="dist-resumen" [class]="sumarDistribucion() === totalPreguntas() ? 'valid' : 'invalid'">
+          Configurado: {{ sumarDistribucion() }} / {{ totalPreguntas() }} preguntas
+        </div>
+      </div>
+    }
+
     <div class="questions-section">
-      <h2 class="section-title">2. Preguntas de la Misión</h2>
+      <h2 class="section-title">{{ materias().length > 0 ? '3' : '2' }}. Preguntas de la Misión</h2>
 
       @for (pregunta of preguntas(); track $index; let i = $index) {
         <div class="question-card">
@@ -102,12 +138,19 @@
 
           <div class="input-group">
             <label>Materia / Área</label>
-            <select [(ngModel)]="pregunta.materia">
+            <select [(ngModel)]="pregunta.materia" (ngModelChange)="recalcularDistribucion()">
               <option value="">Sin materia específica</option>
-              @for (m of materias; track m) {
-                <option [value]="m">{{ m }}</option>
+              @for (m of materias(); track m.id) {
+                <option [value]="m.nombre" [disabled]="estaMateriaAgotada(m.nombre) && pregunta.materia !== m.nombre">
+                  {{ m.nombre }}
+                </option>
               }
             </select>
+          </div>
+
+          <div class="input-group">
+            <label>Puntaje (pts)</label>
+            <input type="number" [(ngModel)]="pregunta.puntaje" min="0.5" step="0.5" placeholder="1">
           </div>
 
           <div class="multimedia-section">
@@ -175,11 +218,14 @@
         </div>
       }
 
+      @if (!puedeAgregarPregunta()) {
+        <div class="limit-message">Límite de preguntas alcanzado ({{ totalPreguntas() }}/{{ totalPreguntas() }})</div>
+      }
       <div class="add-question-group">
-        <button class="btn-add-question" (click)="agregarPregunta('opcion_multiple')">
+        <button class="btn-add-question" (click)="agregarPregunta('opcion_multiple')" [disabled]="!puedeAgregarPregunta()">
           Agregar Opción Múltiple
         </button>
-        <button class="btn-add-question secondary" (click)="agregarPregunta('verdadero_falso')">
+        <button class="btn-add-question secondary" (click)="agregarPregunta('verdadero_falso')" [disabled]="!puedeAgregarPregunta()">
           Agregar Verdadero / Falso
         </button>
       </div>

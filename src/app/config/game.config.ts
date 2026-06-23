@@ -77,7 +77,8 @@ export const MATERIAS = [
   'Comunicación',
   'Ciencia y Tecnología',
   'Personal Social',
-  'Inglés'
+  'Inglés',
+  'Arte y Cultura',
 ] as const;
 
 export type Materia = typeof MATERIAS[number];

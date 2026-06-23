@@ -119,8 +119,18 @@ export class MissionPlayPage implements OnInit {
     } else if (!data || data.length === 0) {
       this.mensajeError.set('Esta misión no tiene preguntas configuradas.');
     } else {
-      this.preguntas.set(data);
-      this.totalPreguntas.set(data.length);
+      const m = this.mision();
+      let preguntasFinales = data;
+
+      if (m?.configuracion_examen && m.configuracion_examen.distribucion) {
+        preguntasFinales = this.supabaseService.seleccionarPreguntasPorDistribucion(
+          data,
+          m.configuracion_examen
+        );
+      }
+
+      this.preguntas.set(preguntasFinales);
+      this.totalPreguntas.set(preguntasFinales.length);
     }
 
     this.cargando.set(false);

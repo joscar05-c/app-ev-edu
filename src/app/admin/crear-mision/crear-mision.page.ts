@@ -12,18 +12,31 @@ import {
   OpcionPregunta,
   MultimData
 } from '../../models/mision.model';
-import { MULTIMEDIA, MATERIAS } from '../../config/game.config';
+import { MULTIMEDIA } from '../../config/game.config';
 
 interface PreguntaForm {
   tipo: TipoPregunta;
   enunciado: string;
   multimedia: MultimData;
   materia: string;
+  puntaje: number;
   estructura: {
     tipo: TipoPregunta;
     opciones: OpcionPregunta[];
     feedback_error: string;
   };
+}
+
+interface MateriaOption {
+  id: string;
+  nombre: string;
+}
+
+interface DistribucionInfo {
+  materia: string;
+  total: number;
+  asignadas: number;
+  restante: number;
 }
 
 @Component({
@@ -60,9 +73,17 @@ export class CrearMisionPage implements OnInit {
 
   readonly maxFileSize = MULTIMEDIA.MAX_FILE_SIZE_MB * 1024 * 1024;
   readonly formatosPermitidos: readonly string[] = MULTIMEDIA.FORMATOS_PERMITIDOS;
-  readonly materias = MATERIAS;
+
+  materias = signal<MateriaOption[]>([]);
+  distribucion = signal<DistribucionInfo[]>([]);
+  configuracionExamen = signal<any>(null);
+
+  totalPreguntas = signal(20);
+  puntajeTotal = signal(100);
+  distribucionContadores = signal<Record<string, number>>({});
 
   ngOnInit() {
+    this.cargarMaterias();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.modoEdicion.set(true);
@@ -83,14 +104,23 @@ export class CrearMisionPage implements OnInit {
       return;
     }
 
-    this.mision.set({
-      titulo: mision.titulo,
-      descripcion: mision.descripcion,
-      nivel_educativo: mision.nivel_educativo,
-      grado: mision.grado,
-      xp_recompensa: mision.xp_recompensa,
-      max_intentos: mision.max_intentos || 1
-    });
+      this.mision.set({
+        titulo: mision.titulo,
+        descripcion: mision.descripcion,
+        nivel_educativo: mision.nivel_educativo,
+        grado: mision.grado,
+        xp_recompensa: mision.xp_recompensa,
+        max_intentos: mision.max_intentos || 1
+      });
+
+      if (mision.configuracion_examen) {
+        this.configuracionExamen.set(mision.configuracion_examen);
+        this.totalPreguntas.set(mision.configuracion_examen.total || 20);
+        this.puntajeTotal.set(mision.configuracion_examen.puntaje_total || 100);
+        if (mision.configuracion_examen.distribucion) {
+          this.distribucionContadores.set({ ...mision.configuracion_examen.distribucion });
+        }
+      }
 
     const { data: preguntas, error: errPreg } = await this.supabaseService.obtenerPreguntasDeMision(id);
     if (errPreg) {
@@ -105,14 +135,70 @@ export class CrearMisionPage implements OnInit {
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
         materia: p.materia || '',
+        puntaje: p.puntaje || 1,
         estructura: p.estructura
       }));
       this.preguntas.set(forms);
+      this.recalcularDistribucion();
     } else {
       this.agregarPregunta('opcion_multiple');
     }
 
     this.cargandoDatos.set(false);
+  }
+
+  async cargarMaterias() {
+    const { data } = await this.supabaseService.obtenerMaterias();
+    if (data) {
+      this.materias.set(data);
+      const contadores: Record<string, number> = {};
+      data.forEach(m => contadores[m.nombre] = 0);
+      this.distribucionContadores.set(contadores);
+    }
+  }
+
+  ajustar(materia: string, delta: number) {
+    this.distribucionContadores.update(c => ({
+      ...c,
+      [materia]: Math.max(0, (c[materia] || 0) + delta)
+    }));
+    this.recalcularDistribucion();
+  }
+
+  sumarDistribucion(): number {
+    return Object.values(this.distribucionContadores()).reduce((a, b) => a + b, 0);
+  }
+
+  puedeAgregarPregunta(): boolean {
+    const config = this.configuracionExamen();
+    if (!config || !config.distribucion) return true;
+    return this.preguntas().length < this.totalPreguntas();
+  }
+
+  recalcularDistribucion() {
+    const config = this.configuracionExamen();
+    if (!config || !config.distribucion) {
+      this.distribucion.set([]);
+      return;
+    }
+
+    const preguntasActuales = this.preguntas();
+    const info: DistribucionInfo[] = Object.entries(config.distribucion).map(([materia, total]) => {
+      const asignadas = preguntasActuales.filter(p => p.materia === materia).length;
+      return {
+        materia,
+        total: total as number,
+        asignadas,
+        restante: Math.max(0, (total as number) - asignadas)
+      };
+    });
+    this.distribucion.set(info);
+  }
+
+  estaMateriaAgotada(materia: string): boolean {
+    const dist = this.distribucion().find(d => d.materia === materia);
+    if (!dist) return false;
+    return dist.restante <= 0;
   }
 
   agregarPregunta(tipo: TipoPregunta) {
@@ -133,6 +219,7 @@ export class CrearMisionPage implements OnInit {
       enunciado: '',
       multimedia: { tiene_multimedia: false },
       materia: '',
+      puntaje: 1,
       estructura: {
         tipo,
         opciones,
@@ -272,20 +359,37 @@ export class CrearMisionPage implements OnInit {
       }
     }
 
+    const tieneDistribucion = this.materias().length > 0;
+    if (tieneDistribucion) {
+      const suma = this.sumarDistribucion();
+      if (suma !== this.totalPreguntas()) {
+        this.mensajeError.set(`La distribución debe sumar ${this.totalPreguntas()} preguntas (actualmente suma ${suma}).`);
+        return;
+      }
+    }
+
     this.guardando.set(true);
     this.mensajeError.set(null);
+
+    const configExamen = tieneDistribucion ? {
+      total: this.totalPreguntas(),
+      puntaje_total: this.puntajeTotal(),
+      distribucion: { ...this.distribucionContadores() }
+    } : undefined;
+
+    const misionPayload = { ...this.mision(), configuracion_examen: configExamen };
 
     let result: { success: boolean; error: string | null };
 
     if (this.modoEdicion()) {
       result = await this.supabaseService.actualizarMisionConPreguntas(
         this.misionId(),
-        this.mision(),
+        misionPayload,
         this.preguntas()
       );
     } else {
       result = await this.supabaseService.crearMisionConPreguntas(
-        this.mision(),
+        misionPayload,
         this.preguntas()
       );
     }

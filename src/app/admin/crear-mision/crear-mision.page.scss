@@ -1,29 +1,16 @@
-:host {
-  --admin-bg: #f8fafc;
-  --admin-card: #ffffff;
-  --admin-text: #1e293b;
-  --admin-text-light: #64748b;
-  --admin-border: #e2e8f0;
-  --admin-primary: #2563eb;
-  --admin-danger: #ef4444;
-  --admin-success: #10b981;
-}
-
-.admin-bg { --background: var(--admin-bg); }
-
 .admin-container {
   max-width: 900px; margin: 0 auto; padding: 30px 20px;
   font-family: 'Segoe UI', Roboto, sans-serif; color: var(--admin-text);
   padding-bottom: 100px;
 }
 
-.admin-header {
-  display: flex; justify-content: space-between; align-items: center;
+.page-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
   margin-bottom: 30px; flex-wrap: wrap; gap: 15px;
-}
 
-.header-titles h1 { margin: 0 0 5px; font-size: 26px; font-weight: 700; }
-.header-titles p { margin: 0; color: var(--admin-text-light); }
+  h1 { margin: 0 0 5px; font-size: 26px; font-weight: 700; color: var(--admin-text); }
+  p { margin: 0; color: var(--admin-text-light); }
+}
 
 .header-actions {
   display: flex;
@@ -32,25 +19,11 @@
 }
 
 .btn-cancel {
-  background: white; border: 1px solid var(--admin-border);
-  padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;
-}
+  background: var(--admin-card); border: 1px solid var(--admin-border);
+  color: var(--admin-text); padding: 10px 20px; border-radius: 8px;
+  font-weight: 600; cursor: pointer;
 
-.btn-logout {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #fee2e2;
-    color: #991b1b;
-    border-color: #fecaca;
-  }
+  &:hover { background: var(--admin-hover); }
 }
 
 .form-card, .question-card {
@@ -60,8 +33,8 @@
 }
 
 .card-title, .section-title {
-  font-size: 18px; font-weight: 700; border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 15px; margin-top: 0; margin-bottom: 20px;
+  font-size: 18px; font-weight: 700; border-bottom: 2px solid var(--admin-border);
+  padding-bottom: 15px; margin-top: 0; margin-bottom: 20px; color: var(--admin-text);
 }
 
 .form-grid {
@@ -70,12 +43,13 @@
 .full-width { grid-column: 1 / -1; }
 
 .input-group label {
-  display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;
+  display: block; font-size: 13px; font-weight: 600; color: var(--admin-text-light); margin-bottom: 8px;
 }
 
 input[type="text"], input[type="number"], textarea, select {
   width: 100%; padding: 12px; border: 1px solid var(--admin-border);
   border-radius: 8px; font-size: 15px; font-family: inherit; box-sizing: border-box;
+  background: var(--admin-card); color: var(--admin-text);
 }
 
 input:focus, textarea:focus { outline: none; border-color: var(--admin-primary); }
@@ -99,7 +73,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
   margin-bottom: 15px;
 
   label {
-    display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;
+    display: block; font-size: 13px; font-weight: 600; color: var(--admin-text-light); margin-bottom: 8px;
   }
 }
 
@@ -109,8 +83,8 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 
 .type-btn {
   flex: 1; padding: 10px 15px; border: 2px solid var(--admin-border);
-  border-radius: 8px; background: white; font-weight: 600; cursor: pointer;
-  transition: all 0.2s; font-size: 14px;
+  border-radius: 8px; background: var(--admin-card); color: var(--admin-text);
+  font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 14px;
 
   &:hover { border-color: var(--admin-primary); color: var(--admin-primary); }
 
@@ -124,7 +98,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 }
 
 .sub-label {
-  display: block; font-size: 12px; font-weight: bold; margin-bottom: 10px; color: #475569;
+  display: block; font-size: 12px; font-weight: bold; margin-bottom: 10px; color: var(--admin-text-light);
 }
 
 .type-badge {
@@ -134,8 +108,8 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 }
 
 .upload-area {
-  border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px;
-  text-align: center; background: #f8fafc;
+  border: 2px dashed var(--admin-border); border-radius: 8px; padding: 20px;
+  text-align: center; background: var(--admin-hover);
 }
 
 .upload-label {
@@ -154,7 +128,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 
 .media-preview {
   display: flex; align-items: center; gap: 15px; padding: 10px;
-  background: #f8fafc; border-radius: 8px; border: 1px solid var(--admin-border);
+  background: var(--admin-hover); border-radius: 8px; border: 1px solid var(--admin-border);
 }
 
 .preview-img {
@@ -171,7 +145,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 }
 
 .options-container {
-  background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;
+  background: var(--admin-hover); padding: 15px; border-radius: 8px; border: 1px dashed var(--admin-border);
 }
 
 .option-row {
@@ -179,10 +153,10 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 }
 
 .radio-correct { width: 20px; height: 20px; cursor: pointer; accent-color: #10b981; }
-.option-letter { font-weight: bold; width: 20px; text-align: center; }
+.option-letter { font-weight: bold; width: 20px; text-align: center; color: var(--admin-text); }
 
 .input-option:disabled {
-  background: #e2e8f0; color: #64748b; cursor: not-allowed;
+  background: var(--admin-border); color: var(--admin-text-light); cursor: not-allowed;
 }
 
 .add-question-group {
@@ -203,7 +177,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 }
 
 .bottom-actions {
-  position: fixed; bottom: 0; left: 0; right: 0; background: white;
+  position: fixed; bottom: 0; left: 0; right: 0; background: var(--admin-card);
   padding: 15px 20px; box-shadow: 0 -4px 10px rgba(0,0,0,0.05); text-align: right;
   border-top: 1px solid var(--admin-border); z-index: 100;
 }
@@ -213,6 +187,24 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
   padding: 15px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;
 }
 .btn-save:disabled { opacity: 0.5; }
+
+.distribution-card { margin-bottom: 20px; }
+.hint { color: var(--admin-text-light); font-size: 13px; margin: 0 0 15px 0; }
+.exam-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.distribucion-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.distribucion-item { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--admin-hover); border: 1px solid var(--admin-border); border-radius: 8px; font-size: 13px; transition: all 0.2s; }
+.distribucion-item.agotada { opacity: 0.5; border-color: #16a34a; background: #dcfce7; }
+.dist-name { font-weight: 600; color: var(--admin-text); min-width: 100px; }
+.dist-controls { display: flex; align-items: center; gap: 8px; }
+.btn-qty { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--admin-border); background: var(--admin-card); color: var(--admin-text); font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.btn-qty:hover:not(:disabled) { border-color: var(--admin-primary); }
+.btn-qty:disabled { opacity: 0.3; cursor: not-allowed; }
+.qty-value { font-size: 16px; font-weight: 700; min-width: 24px; text-align: center; color: var(--admin-text); }
+.dist-resumen { text-align: center; font-weight: 600; font-size: 14px; margin-top: 5px; }
+.dist-resumen.valid { color: #16a34a; }
+.dist-resumen.invalid { color: #dc2626; }
+.limit-message { text-align: center; padding: 12px; background: #fef3c7; color: #92400e; border-radius: 8px; font-size: 14px; font-weight: 600; margin-bottom: 15px; }
+.btn-add-question:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
 .alert-error {
   background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px;
@@ -228,7 +220,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
   width: 40px;
   height: 40px;
   margin: 0 auto 15px;
-  border: 3px solid #e2e8f0;
+  border: 3px solid var(--admin-spinner-track);
   border-top-color: var(--admin-primary);
   border-radius: 50%;
   animation: spin 1s infinite linear;
@@ -237,7 +229,7 @@ input:focus, textarea:focus { outline: none; border-color: var(--admin-primary);
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 768px) {
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid, .exam-config-grid { grid-template-columns: 1fr; }
   .type-buttons { flex-direction: column; }
   .add-question-group { flex-direction: column; }
 }

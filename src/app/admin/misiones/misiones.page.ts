@@ -44,9 +44,9 @@ import { Mision } from '../../models/mision.model';
                   <span class="badge" [class]="m.activo ? 'badge-green' : 'badge-red'">{{ m.activo ? 'Activo' : 'Inactivo' }}</span>
                 </div>
                 <div class="col-actions">
-                  <button class="btn-icon" (click)="editarMision(m)">✏️</button>
-                  <button class="btn-icon" (click)="toggleEstado(m)">🔄</button>
-                  <button class="btn-icon danger" (click)="eliminarMision(m)">🗑️</button>
+                  <button class="btn-icon" (click)="editarMision(m)" title="Editar">✏️</button>
+                  <button class="btn-icon" (click)="toggleEstado(m)" title="Activar/Desactivar">🔄</button>
+                  <button class="btn-icon danger" (click)="eliminarMision(m)" title="Eliminar">🗑️</button>
                 </div>
               </div>
             }
@@ -60,22 +60,24 @@ import { Mision } from '../../models/mision.model';
   styles: [`
     .page-container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; font-family: 'Segoe UI', Roboto, sans-serif; }
     .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; }
-    .btn-primary { background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .table-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
-    .table-header { display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.8fr 1fr; background: #f1f5f9; padding: 12px 16px; font-weight: 600; font-size: 13px; color: #64748b; }
-    .table-row { display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.8fr 1fr; padding: 12px 16px; align-items: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-    .table-row:hover { background: #f8fafc; }
+    .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: var(--admin-text); }
+    .btn-primary { background: var(--admin-primary); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .table-card { background: var(--admin-card); border-radius: 12px; border: 1px solid var(--admin-border); overflow: hidden; }
+    .table-header { display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.8fr 1.2fr; background: var(--admin-table-header-bg); padding: 12px 16px; font-weight: 600; font-size: 13px; color: var(--admin-text-light); }
+    .table-row { display: grid; grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.8fr 1.2fr; padding: 12px 16px; align-items: center; border-bottom: 1px solid var(--admin-border); font-size: 14px; }
+    .table-row:hover { background: var(--admin-hover); }
     .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-    .badge-gray { background: #f1f5f9; color: #475569; }
+    .badge-gray { background: var(--admin-table-header-bg); color: var(--admin-text-light); }
     .badge-green { background: #dcfce7; color: #166534; }
     .badge-red { background: #fee2e2; color: #991b1b; }
+    .col-title strong { color: var(--admin-text); }
     .col-actions { display: flex; gap: 6px; }
-    .btn-icon { background: transparent; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 8px; cursor: pointer; }
+    .btn-icon { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 6px; padding: 5px 8px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+    .btn-icon:hover { background: var(--admin-hover); border-color: var(--admin-primary); }
     .btn-icon.danger:hover { background: #fee2e2; }
     .loading { text-align: center; padding: 40px; }
-    .spinner { width: 36px; height: 36px; margin: 0 auto; border: 3px solid #e2e8f0; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; }
-    .empty { text-align: center; padding: 40px; color: #94a3b8; }
+    .spinner { width: 36px; height: 36px; margin: 0 auto; border: 3px solid var(--admin-spinner-track, #e2e8f0); border-top-color: var(--admin-primary, #2563eb); border-radius: 50%; animation: spin 1s linear infinite; }
+    .empty { text-align: center; padding: 40px; color: var(--admin-text-light); }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 768px) { .table-header, .table-row { grid-template-columns: 1fr auto; } .col-level, .col-xp, .col-intentos, .col-status { display: none; } }
   `]

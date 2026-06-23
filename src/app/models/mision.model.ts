@@ -29,6 +29,7 @@ export interface Pregunta {
   multimedia: MultimData;
   estructura: EstructuraPregunta;
   materia?: string;
+  puntaje?: number;
 }
 
 export interface Mision {
@@ -43,6 +44,7 @@ export interface Mision {
   max_intentos: number;
   configuracion_examen?: {
     total: number;
+    puntaje_total: number;
     distribucion: Record<string, number>;
   };
 }
