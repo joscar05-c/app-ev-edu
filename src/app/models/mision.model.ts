@@ -28,6 +28,7 @@ export interface Pregunta {
   enunciado: string;
   multimedia: MultimData;
   estructura: EstructuraPregunta;
+  materia?: string;
 }
 
 export interface Mision {
@@ -39,6 +40,11 @@ export interface Mision {
   xp_recompensa: number;
   activo: boolean;
   created_at: string;
+  max_intentos: number;
+  configuracion_examen?: {
+    total: number;
+    distribucion: Record<string, number>;
+  };
 }
 
 export interface InstitucionEducativa {

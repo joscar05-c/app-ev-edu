@@ -1,190 +1,202 @@
-<ion-content [fullscreen]="true" class="admin-bg">
-  <div class="admin-container">
+<div class="admin-container">
 
-    <div class="admin-header">
-      <div class="header-titles">
-        @if (modoEdicion()) {
-          <h1>Editar Misión</h1>
-          <p>Modifica los detalles y las preguntas</p>
-        } @else {
-          <h1>Crear Nueva Misión</h1>
-          <p>Configura los detalles y las preguntas dinámicas</p>
-        }
-      </div>
-      <div class="header-actions">
-        <button class="btn-cancel" routerLink="/admin/dashboard" [disabled]="guardando()">Volver</button>
-        <button class="btn-logout" (click)="cerrarSesion()">Cerrar Sesión</button>
+  <div class="page-header">
+    <div>
+      @if (modoEdicion()) {
+        <h1>Editar Misión</h1>
+        <p>Modifica los detalles y las preguntas</p>
+      } @else {
+        <h1>Crear Nueva Misión</h1>
+        <p>Configura los detalles y las preguntas dinámicas</p>
+      }
+    </div>
+    <div class="header-actions">
+      <button class="btn-cancel" routerLink="/admin/misiones" [disabled]="guardando()">Volver</button>
+    </div>
+  </div>
+
+  @if (mensajeError()) {
+    <div class="alert-error">{{ mensajeError() }}</div>
+  }
+
+  @if (cargandoDatos()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando misión...</p>
+    </div>
+  } @else {
+
+    <div class="form-card">
+      <h2 class="card-title">1. Detalles Generales</h2>
+
+      <div class="form-grid">
+        <div class="input-group full-width">
+          <label>Título de la Evaluación</label>
+          <input type="text" [(ngModel)]="mision().titulo" placeholder="Ej: Examen Bimestral de Comunicación">
+        </div>
+
+        <div class="input-group full-width">
+          <label>Descripción / Instrucciones</label>
+          <textarea [(ngModel)]="mision().descripcion" rows="2" placeholder="Instrucciones para el alumno..."></textarea>
+        </div>
+
+        <div class="input-group">
+          <label>Nivel Educativo</label>
+          <select [(ngModel)]="mision().nivel_educativo">
+            <option value="Primaria">Primaria</option>
+            <option value="Secundaria">Secundaria</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Grado</label>
+          <input type="number" [(ngModel)]="mision().grado" min="1" max="6">
+        </div>
+
+        <div class="input-group">
+          <label>Recompensa (XP)</label>
+          <input type="number" [(ngModel)]="mision().xp_recompensa" step="50">
+        </div>
+
+        <div class="input-group">
+          <label>Máximo de Intentos</label>
+          <input type="number" [(ngModel)]="mision().max_intentos" min="1" max="10">
+        </div>
       </div>
     </div>
 
-    @if (mensajeError()) {
-      <div class="alert-error">{{ mensajeError() }}</div>
-    }
+    <div class="questions-section">
+      <h2 class="section-title">2. Preguntas de la Misión</h2>
 
-    @if (cargandoDatos()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Cargando misión...</p>
-      </div>
-    } @else {
-
-      <div class="form-card">
-        <h2 class="card-title">1. Detalles Generales</h2>
-
-        <div class="form-grid">
-          <div class="input-group full-width">
-            <label>Título de la Evaluación</label>
-            <input type="text" [(ngModel)]="mision().titulo" placeholder="Ej: Examen Bimestral de Comunicación">
+      @for (pregunta of preguntas(); track $index; let i = $index) {
+        <div class="question-card">
+          <div class="question-header">
+            <h3>Pregunta {{ i + 1 }}</h3>
+            <button class="btn-delete" (click)="eliminarPregunta(i)" title="Eliminar Pregunta">Eliminar</button>
           </div>
 
-          <div class="input-group full-width">
-            <label>Descripción / Instrucciones</label>
-            <textarea [(ngModel)]="mision().descripcion" rows="2" placeholder="Instrucciones para el alumno..."></textarea>
+          <div class="type-selector">
+            <label>Tipo de pregunta:</label>
+            <div class="type-buttons">
+              <button
+                class="type-btn"
+                [class.active]="pregunta.tipo === 'opcion_multiple'"
+                (click)="cambiarTipoPregunta(i, 'opcion_multiple')"
+              >
+                Opción Múltiple
+              </button>
+              <button
+                class="type-btn"
+                [class.active]="pregunta.tipo === 'verdadero_falso'"
+                (click)="cambiarTipoPregunta(i, 'verdadero_falso')"
+              >
+                Verdadero / Falso
+              </button>
+            </div>
           </div>
 
           <div class="input-group">
-            <label>Nivel Educativo</label>
-            <select [(ngModel)]="mision().nivel_educativo">
-              <option value="Primaria">Primaria</option>
-              <option value="Secundaria">Secundaria</option>
+            <label>Enunciado de la Pregunta</label>
+            <textarea [(ngModel)]="pregunta.enunciado" rows="2" placeholder="Escribe la pregunta aquí..."></textarea>
+          </div>
+
+          <div class="input-group">
+            <label>Materia / Área</label>
+            <select [(ngModel)]="pregunta.materia">
+              <option value="">Sin materia específica</option>
+              @for (m of materias; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
             </select>
           </div>
 
-          <div class="input-group">
-            <label>Grado</label>
-            <input type="number" [(ngModel)]="mision().grado" min="1" max="6">
-          </div>
+          <div class="multimedia-section">
+            <label class="sub-label">Multimedia (opcional)</label>
 
-          <div class="input-group">
-            <label>Recompensa (XP)</label>
-            <input type="number" [(ngModel)]="mision().xp_recompensa" step="50">
-          </div>
-        </div>
-      </div>
-
-      <div class="questions-section">
-        <h2 class="section-title">2. Preguntas de la Misión</h2>
-
-        @for (pregunta of preguntas(); track $index; let i = $index) {
-          <div class="question-card">
-            <div class="question-header">
-              <h3>Pregunta {{ i + 1 }}</h3>
-              <button class="btn-delete" (click)="eliminarPregunta(i)" title="Eliminar Pregunta">Eliminar</button>
-            </div>
-
-            <div class="type-selector">
-              <label>Tipo de pregunta:</label>
-              <div class="type-buttons">
-                <button
-                  class="type-btn"
-                  [class.active]="pregunta.tipo === 'opcion_multiple'"
-                  (click)="cambiarTipoPregunta(i, 'opcion_multiple')"
-                >
-                  Opción Múltiple
-                </button>
-                <button
-                  class="type-btn"
-                  [class.active]="pregunta.tipo === 'verdadero_falso'"
-                  (click)="cambiarTipoPregunta(i, 'verdadero_falso')"
-                >
-                  Verdadero / Falso
-                </button>
+            @if (pregunta.multimedia.tiene_multimedia && pregunta.multimedia.url) {
+              <div class="media-preview">
+                <img [src]="pregunta.multimedia.url" alt="Preview" class="preview-img">
+                <button class="btn-remove-media" (click)="eliminarMultimedia(i)">Quitar</button>
               </div>
-            </div>
-
-            <div class="input-group">
-              <label>Enunciado de la Pregunta</label>
-              <textarea [(ngModel)]="pregunta.enunciado" rows="2" placeholder="Escribe la pregunta aquí..."></textarea>
-            </div>
-
-            <div class="multimedia-section">
-              <label class="sub-label">Multimedia (opcional)</label>
-
-              @if (pregunta.multimedia.tiene_multimedia && pregunta.multimedia.url) {
-                <div class="media-preview">
-                  <img [src]="pregunta.multimedia.url" alt="Preview" class="preview-img">
-                  <button class="btn-remove-media" (click)="eliminarMultimedia(i)">Quitar</button>
-                </div>
-              } @else {
-                <div class="upload-area">
-                  @if (subiendoImagen() === i) {
-                    <div class="upload-loading">Subiendo imagen...</div>
-                  } @else {
-                    <label class="upload-label">
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        (change)="onFileSelected($event, i)"
-                        class="file-input"
-                      >
-                      Seleccionar imagen (max {{ 5 }}MB)
-                    </label>
-                  }
-                </div>
-              }
-            </div>
-
-            <div class="options-container">
-              <label class="sub-label">
-                Opciones (Selecciona la correcta)
-                @if (pregunta.tipo === 'verdadero_falso') {
-                  <span class="type-badge">V/F</span>
+            } @else {
+              <div class="upload-area">
+                @if (subiendoImagen() === i) {
+                  <div class="upload-loading">Subiendo imagen...</div>
                 } @else {
-                  <span class="type-badge">Múltiple</span>
+                  <label class="upload-label">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      (change)="onFileSelected($event, i)"
+                      class="file-input"
+                    >
+                    Seleccionar imagen (max {{ 5 }}MB)
+                  </label>
                 }
-              </label>
-
-              @for (opcion of pregunta.estructura.opciones; track opcion.id) {
-                <div class="option-row">
-                  <input
-                    type="radio"
-                    [name]="'correcta_' + i"
-                    [checked]="opcion.es_correcta"
-                    (change)="marcarOpcionCorrecta(i, opcion.id)"
-                    class="radio-correct"
-                  >
-                  <span class="option-letter">{{ opcion.id }}</span>
-                  <input
-                    type="text"
-                    [(ngModel)]="opcion.texto"
-                    [placeholder]="opcion.id === 'V' ? 'Verdadero' : opcion.id === 'F' ? 'Falso' : 'Texto de la opción'"
-                    class="input-option"
-                    [disabled]="pregunta.tipo === 'verdadero_falso'"
-                  >
-                </div>
-              }
-            </div>
-
-            <div class="input-group" style="margin-top: 15px;">
-              <label>Retroalimentación (si falla)</label>
-              <input type="text" [(ngModel)]="pregunta.estructura.feedback_error" placeholder="Explicación pedagógica del error">
-            </div>
+              </div>
+            }
           </div>
-        }
 
-        <div class="add-question-group">
-          <button class="btn-add-question" (click)="agregarPregunta('opcion_multiple')">
-            Agregar Opción Múltiple
-          </button>
-          <button class="btn-add-question secondary" (click)="agregarPregunta('verdadero_falso')">
-            Agregar Verdadero / Falso
-          </button>
+          <div class="options-container">
+            <label class="sub-label">
+              Opciones (Selecciona la correcta)
+              @if (pregunta.tipo === 'verdadero_falso') {
+                <span class="type-badge">V/F</span>
+              } @else {
+                <span class="type-badge">Múltiple</span>
+              }
+            </label>
+
+            @for (opcion of pregunta.estructura.opciones; track opcion.id) {
+              <div class="option-row">
+                <input
+                  type="radio"
+                  [name]="'correcta_' + i"
+                  [checked]="opcion.es_correcta"
+                  (change)="marcarOpcionCorrecta(i, opcion.id)"
+                  class="radio-correct"
+                >
+                <span class="option-letter">{{ opcion.id }}</span>
+                <input
+                  type="text"
+                  [(ngModel)]="opcion.texto"
+                  [placeholder]="opcion.id === 'V' ? 'Verdadero' : opcion.id === 'F' ? 'Falso' : 'Texto de la opción'"
+                  class="input-option"
+                  [disabled]="pregunta.tipo === 'verdadero_falso'"
+                >
+              </div>
+            }
+          </div>
+
+          <div class="input-group" style="margin-top: 15px;">
+            <label>Retroalimentación (si falla)</label>
+            <input type="text" [(ngModel)]="pregunta.estructura.feedback_error" placeholder="Explicación pedagógica del error">
+          </div>
         </div>
-      </div>
+      }
 
-      <div class="bottom-actions">
-        <button class="btn-save" (click)="guardarMision()" [disabled]="guardando()">
-          @if (guardando()) {
-            Guardando...
-          } @else if (modoEdicion()) {
-            Actualizar Misión
-          } @else {
-            Guardar Misión en Base de Datos
-          }
+      <div class="add-question-group">
+        <button class="btn-add-question" (click)="agregarPregunta('opcion_multiple')">
+          Agregar Opción Múltiple
+        </button>
+        <button class="btn-add-question secondary" (click)="agregarPregunta('verdadero_falso')">
+          Agregar Verdadero / Falso
         </button>
       </div>
+    </div>
 
-    }
+    <div class="bottom-actions">
+      <button class="btn-save" (click)="guardarMision()" [disabled]="guardando()">
+        @if (guardando()) {
+          Guardando...
+        } @else if (modoEdicion()) {
+          Actualizar Misión
+        } @else {
+          Guardar Misión en Base de Datos
+        }
+      </button>
+    </div>
 
-  </div>
-</ion-content>
+  }
+
+</div>

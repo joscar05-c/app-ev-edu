@@ -1,0 +1,43 @@
+<ion-content [fullscreen]="true" class="admin-bg">
+  <div class="admin-shell">
+    <aside class="sidebar" [class.collapsed]="!sidebarAbierto()">
+      <div class="sidebar-header">
+        <span class="logo-text" *ngIf="sidebarAbierto()">Admin Panel</span>
+        <button class="btn-toggle" (click)="toggleSidebar()">☰</button>
+      </div>
+
+      <nav class="sidebar-nav">
+        @for (item of menuItems; track item.route) {
+          <a class="nav-item"
+             [routerLink]="item.route"
+             [class.active]="isActive(item.route)"
+             (click)="onNavClick()">
+            <span class="nav-icon">{{ item.icon }}</span>
+            @if (sidebarAbierto()) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar-footer">
+        @if (sidebarAbierto()) {
+          <div class="admin-info">
+            <span class="admin-name">{{ admin()?.nombre_completo }}</span>
+            <span class="admin-role">Administrador</span>
+          </div>
+        }
+        <button class="btn-logout" (click)="cerrarSesion()" [title]="sidebarAbierto() ? '' : 'Cerrar Sesión'">
+          <span class="nav-icon">🚪</span>
+          @if (sidebarAbierto()) {
+            <span class="nav-label">Cerrar Sesión</span>
+          }
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</ion-content>

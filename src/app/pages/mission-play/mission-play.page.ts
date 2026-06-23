@@ -91,6 +91,23 @@ export class MissionPlayPage implements OnInit {
     const { data } = await this.supabaseService.verificarIntentoPrevio(est.id, this.misionId);
     if (data) {
       this.yaCompletada.set(true);
+      this.mensajeError.set('Ya completaste esta misión.');
+      return;
+    }
+
+    const m = this.mision();
+    if (m && m.max_intentos && m.max_intentos > 1) {
+      const { count } = await (this.supabaseService as any).supabase
+        .from('intentos_misiones')
+        .select('id', { count: 'exact', head: true })
+        .eq('estudiante_id', est.id)
+        .eq('mision_id', this.misionId)
+        .eq('completado', true);
+
+      if (count && count >= m.max_intentos) {
+        this.yaCompletada.set(true);
+        this.mensajeError.set(`Has agotado tus ${m.max_intentos} intento(s) para esta misión.`);
+      }
     }
   }
 

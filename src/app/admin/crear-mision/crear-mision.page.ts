@@ -12,12 +12,13 @@ import {
   OpcionPregunta,
   MultimData
 } from '../../models/mision.model';
-import { MULTIMEDIA } from '../../config/game.config';
+import { MULTIMEDIA, MATERIAS } from '../../config/game.config';
 
 interface PreguntaForm {
   tipo: TipoPregunta;
   enunciado: string;
   multimedia: MultimData;
+  materia: string;
   estructura: {
     tipo: TipoPregunta;
     opciones: OpcionPregunta[];
@@ -44,7 +45,8 @@ export class CrearMisionPage implements OnInit {
     descripcion: '',
     nivel_educativo: 'Secundaria',
     grado: 4,
-    xp_recompensa: 100
+    xp_recompensa: 100,
+    max_intentos: 1
   });
 
   preguntas = signal<PreguntaForm[]>([]);
@@ -58,6 +60,7 @@ export class CrearMisionPage implements OnInit {
 
   readonly maxFileSize = MULTIMEDIA.MAX_FILE_SIZE_MB * 1024 * 1024;
   readonly formatosPermitidos: readonly string[] = MULTIMEDIA.FORMATOS_PERMITIDOS;
+  readonly materias = MATERIAS;
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -85,7 +88,8 @@ export class CrearMisionPage implements OnInit {
       descripcion: mision.descripcion,
       nivel_educativo: mision.nivel_educativo,
       grado: mision.grado,
-      xp_recompensa: mision.xp_recompensa
+      xp_recompensa: mision.xp_recompensa,
+      max_intentos: mision.max_intentos || 1
     });
 
     const { data: preguntas, error: errPreg } = await this.supabaseService.obtenerPreguntasDeMision(id);
@@ -100,6 +104,7 @@ export class CrearMisionPage implements OnInit {
         tipo: p.tipo_pregunta,
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
+        materia: p.materia || '',
         estructura: p.estructura
       }));
       this.preguntas.set(forms);
@@ -127,6 +132,7 @@ export class CrearMisionPage implements OnInit {
       tipo,
       enunciado: '',
       multimedia: { tiene_multimedia: false },
+      materia: '',
       estructura: {
         tipo,
         opciones,

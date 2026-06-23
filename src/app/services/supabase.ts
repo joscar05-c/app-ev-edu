@@ -84,6 +84,7 @@ export class SupabaseService {
           nivel_educativo: misionData.nivel_educativo,
           grado: misionData.grado,
           xp_recompensa: misionData.xp_recompensa,
+          max_intentos: misionData.max_intentos || 1,
           activo: true
         })
         .select()
@@ -97,6 +98,7 @@ export class SupabaseService {
         tipo_pregunta: p.tipo,
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
+        materia: p.materia || '',
         estructura: p.estructura
       }));
 
@@ -295,7 +297,8 @@ export class SupabaseService {
           descripcion: misionData.descripcion,
           nivel_educativo: misionData.nivel_educativo,
           grado: misionData.grado,
-          xp_recompensa: misionData.xp_recompensa
+          xp_recompensa: misionData.xp_recompensa,
+          max_intentos: misionData.max_intentos || 1
         })
         .eq('id', misionId);
 
@@ -312,6 +315,7 @@ export class SupabaseService {
         tipo_pregunta: p.tipo,
         enunciado: p.enunciado,
         multimedia: p.multimedia || { tiene_multimedia: false },
+        materia: p.materia || '',
         estructura: p.estructura
       }));
 

@@ -71,3 +71,13 @@ export const COLORES_NIVEL: Record<number, string> = {
   9: '#a78bfa',
   10: '#ef4444',
 };
+
+export const MATERIAS = [
+  'Matemática',
+  'Comunicación',
+  'Ciencia y Tecnología',
+  'Personal Social',
+  'Inglés'
+] as const;
+
+export type Materia = typeof MATERIAS[number];

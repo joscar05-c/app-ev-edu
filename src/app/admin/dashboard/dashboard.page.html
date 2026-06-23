@@ -1,118 +1,100 @@
-<ion-content [fullscreen]="true" class="admin-bg">
-  <div class="admin-container">
+<div class="admin-container">
 
-    <div class="admin-header">
-      <div class="header-titles">
-        <h1>Panel Administrativo</h1>
-        <p>Gestión de Misiones y Evaluaciones</p>
-        @if (admin()) {
-          <span class="admin-name">{{ admin()?.nombre_completo }}</span>
-        }
-      </div>
-      <div class="header-actions">
-        <button class="btn-create" routerLink="/admin/crear-mision">
-          <span class="icon">➕</span> Nueva Misión
-        </button>
-        <button class="btn-logout" (click)="cerrarSesion()">Cerrar Sesión</button>
-      </div>
+  @if (mensajeError()) {
+    <div class="alert-error">⚠️ {{ mensajeError() }}</div>
+  }
+
+  @if (cargando()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando datos...</p>
+    </div>
+  }
+
+  @if (!cargando()) {
+
+    <!-- SECCIÓN DE ESTADÍSTICAS -->
+    <div class="section-header">
+      <h2>📈 Estadísticas Generales</h2>
     </div>
 
-    @if (mensajeError()) {
-      <div class="alert-error">⚠️ {{ mensajeError() }}</div>
+    @if (kpis().length > 0) {
+      <app-kpi-cards [kpis]="kpis()" />
     }
 
-    @if (cargando()) {
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Cargando datos...</p>
-      </div>
+    <div class="charts-grid">
+      @if (rendimientoPorNivel().length > 0) {
+        <app-chart-rendimiento [data]="rendimientoPorNivel()" />
+      }
+
+      @if (rankingIEs().length > 0) {
+        <app-chart-ranking [data]="rankingIEs()" />
+      }
+    </div>
+
+    @if (preguntasError().length > 0) {
+      <app-tabla-preguntas-error [data]="preguntasError()" />
     }
 
-    @if (!cargando()) {
+    <!-- SECCIÓN DE MISIONES -->
+    <div class="section-header">
+      <h2>📋 Gestión de Misiones</h2>
+    </div>
 
-      <!-- SECCIÓN DE ESTADÍSTICAS -->
-      <div class="section-header">
-        <h2>📈 Estadísticas Generales</h2>
-      </div>
+    @if (misiones().length > 0) {
+      <div class="data-table-card">
 
-      @if (kpis().length > 0) {
-        <app-kpi-cards [kpis]="kpis()" />
-      }
+        <div class="table-header hidden-mobile">
+          <div class="col-title">Título de la Misión</div>
+          <div class="col-level">Nivel y Grado</div>
+          <div class="col-xp">Recompensa</div>
+          <div class="col-status">Estado</div>
+          <div class="col-actions">Acciones</div>
+        </div>
 
-      <div class="charts-grid">
-        @if (rendimientoPorNivel().length > 0) {
-          <app-chart-rendimiento [data]="rendimientoPorNivel()" />
-        }
-
-        @if (rankingIEs().length > 0) {
-          <app-chart-ranking [data]="rankingIEs()" />
-        }
-      </div>
-
-      @if (preguntasError().length > 0) {
-        <app-tabla-preguntas-error [data]="preguntasError()" />
-      }
-
-      <!-- SECCIÓN DE MISIONES -->
-      <div class="section-header">
-        <h2>📋 Gestión de Misiones</h2>
-      </div>
-
-      @if (misiones().length > 0) {
-        <div class="data-table-card">
-
-          <div class="table-header hidden-mobile">
-            <div class="col-title">Título de la Misión</div>
-            <div class="col-level">Nivel y Grado</div>
-            <div class="col-xp">Recompensa</div>
-            <div class="col-status">Estado</div>
-            <div class="col-actions">Acciones</div>
-          </div>
-
-          <div class="table-body">
-            @for (mision of misiones(); track mision.id) {
-              <div class="table-row">
-                <div class="col-title">
-                  <strong>{{ mision.titulo }}</strong>
-                  <span class="mobile-only-label">{{ mision.nivel_educativo }} - {{ mision.grado }}°</span>
-                </div>
-
-                <div class="col-level hidden-mobile">
-                  <span class="badge gray">{{ mision.nivel_educativo }}</span>
-                  <span class="badge gray">{{ mision.grado }}°</span>
-                </div>
-
-                <div class="col-xp">
-                  <span class="xp-text">⭐ {{ mision.xp_recompensa }} XP</span>
-                </div>
-
-                <div class="col-status">
-                  @if (mision.activo) {
-                    <span class="badge success">Activo</span>
-                  } @else {
-                    <span class="badge danger">Inactivo</span>
-                  }
-                </div>
-
-                <div class="col-actions">
-                  <button class="action-btn edit" title="Editar" (click)="editarMision(mision)">✏️</button>
-                  <button class="action-btn toggle" title="Activar/Desactivar" (click)="cambiarEstadoMision(mision)">🔄</button>
-                  <button class="action-btn delete" title="Eliminar" (click)="eliminarMision(mision)">🗑️</button>
-                </div>
+        <div class="table-body">
+          @for (mision of misiones(); track mision.id) {
+            <div class="table-row">
+              <div class="col-title">
+                <strong>{{ mision.titulo }}</strong>
+                <span class="mobile-only-label">{{ mision.nivel_educativo }} - {{ mision.grado }}°</span>
               </div>
-            }
-          </div>
 
-        </div>
-      } @else {
-        <div class="empty-state">
-          <div class="icon-empty">🗂️</div>
-          <h3>No hay misiones creadas</h3>
-          <p>Comienza creando la primera evaluación para los estudiantes.</p>
-        </div>
-      }
+              <div class="col-level hidden-mobile">
+                <span class="badge gray">{{ mision.nivel_educativo }}</span>
+                <span class="badge gray">{{ mision.grado }}°</span>
+              </div>
 
+              <div class="col-xp">
+                <span class="xp-text">⭐ {{ mision.xp_recompensa }} XP</span>
+              </div>
+
+              <div class="col-status">
+                @if (mision.activo) {
+                  <span class="badge success">Activo</span>
+                } @else {
+                  <span class="badge danger">Inactivo</span>
+                }
+              </div>
+
+              <div class="col-actions">
+                <button class="action-btn edit" title="Editar" (click)="editarMision(mision)">✏️</button>
+                <button class="action-btn toggle" title="Activar/Desactivar" (click)="cambiarEstadoMision(mision)">🔄</button>
+                <button class="action-btn delete" title="Eliminar" (click)="eliminarMision(mision)">🗑️</button>
+              </div>
+            </div>
+          }
+        </div>
+
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="icon-empty">🗂️</div>
+        <h3>No hay misiones creadas</h3>
+        <p>Comienza creando la primera evaluación para los estudiantes.</p>
+      </div>
     }
 
-  </div>
-</ion-content>
+  }
+
+</div>
