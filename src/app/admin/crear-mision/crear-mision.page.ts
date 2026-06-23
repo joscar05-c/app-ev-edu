@@ -1,8 +1,8 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, AlertController } from '@ionic/angular';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { SupabaseService } from '../../services/supabase';
 import { AuthService } from '../../services/auth';
 import {
@@ -32,10 +32,11 @@ interface PreguntaForm {
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule, RouterModule]
 })
-export class CrearMisionPage {
+export class CrearMisionPage implements OnInit {
   private supabaseService = inject(SupabaseService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private alertCtrl = inject(AlertController);
 
   mision = signal<Partial<Mision>>({
@@ -51,11 +52,62 @@ export class CrearMisionPage {
   mensajeError = signal<string | null>(null);
   subiendoImagen = signal<number | null>(null);
 
+  modoEdicion = signal<boolean>(false);
+  misionId = signal<string>('');
+  cargandoDatos = signal<boolean>(false);
+
   readonly maxFileSize = MULTIMEDIA.MAX_FILE_SIZE_MB * 1024 * 1024;
   readonly formatosPermitidos: readonly string[] = MULTIMEDIA.FORMATOS_PERMITIDOS;
 
-  constructor() {
-    this.agregarPregunta('opcion_multiple');
+  ngOnInit() {
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.modoEdicion.set(true);
+      this.misionId.set(id);
+      this.cargarMisionExistente(id);
+    } else {
+      this.agregarPregunta('opcion_multiple');
+    }
+  }
+
+  async cargarMisionExistente(id: string) {
+    this.cargandoDatos.set(true);
+
+    const { data: mision, error: errMision } = await this.supabaseService.obtenerMisionPorId(id);
+    if (errMision || !mision) {
+      this.mensajeError.set(errMision || 'Misión no encontrada.');
+      this.cargandoDatos.set(false);
+      return;
+    }
+
+    this.mision.set({
+      titulo: mision.titulo,
+      descripcion: mision.descripcion,
+      nivel_educativo: mision.nivel_educativo,
+      grado: mision.grado,
+      xp_recompensa: mision.xp_recompensa
+    });
+
+    const { data: preguntas, error: errPreg } = await this.supabaseService.obtenerPreguntasDeMision(id);
+    if (errPreg) {
+      this.mensajeError.set(errPreg);
+      this.cargandoDatos.set(false);
+      return;
+    }
+
+    if (preguntas && preguntas.length > 0) {
+      const forms: PreguntaForm[] = preguntas.map(p => ({
+        tipo: p.tipo_pregunta,
+        enunciado: p.enunciado,
+        multimedia: p.multimedia || { tiene_multimedia: false },
+        estructura: p.estructura
+      }));
+      this.preguntas.set(forms);
+    } else {
+      this.agregarPregunta('opcion_multiple');
+    }
+
+    this.cargandoDatos.set(false);
   }
 
   agregarPregunta(tipo: TipoPregunta) {
@@ -217,17 +269,27 @@ export class CrearMisionPage {
     this.guardando.set(true);
     this.mensajeError.set(null);
 
-    const { success, error } = await this.supabaseService.crearMisionConPreguntas(
-      this.mision(),
-      this.preguntas()
-    );
+    let result: { success: boolean; error: string | null };
+
+    if (this.modoEdicion()) {
+      result = await this.supabaseService.actualizarMisionConPreguntas(
+        this.misionId(),
+        this.mision(),
+        this.preguntas()
+      );
+    } else {
+      result = await this.supabaseService.crearMisionConPreguntas(
+        this.mision(),
+        this.preguntas()
+      );
+    }
 
     this.guardando.set(false);
 
-    if (success) {
+    if (result.success) {
       this.router.navigate(['/admin/dashboard']);
     } else {
-      this.mensajeError.set(`Error al guardar: ${error}`);
+      this.mensajeError.set(`Error al guardar: ${result.error}`);
     }
   }
 

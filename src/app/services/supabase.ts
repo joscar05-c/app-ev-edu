@@ -281,4 +281,88 @@ export class SupabaseService {
       return { data: null, error: 'No se pudo subir la imagen.' };
     }
   }
+
+  async actualizarMisionConPreguntas(
+    misionId: string,
+    misionData: Partial<Mision>,
+    preguntasData: any[]
+  ): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { error: errorMision } = await this.supabase
+        .from('misiones')
+        .update({
+          titulo: misionData.titulo,
+          descripcion: misionData.descripcion,
+          nivel_educativo: misionData.nivel_educativo,
+          grado: misionData.grado,
+          xp_recompensa: misionData.xp_recompensa
+        })
+        .eq('id', misionId);
+
+      if (errorMision) throw errorMision;
+
+      await this.supabase
+        .from('preguntas')
+        .delete()
+        .eq('mision_id', misionId);
+
+      const preguntasInsert = preguntasData.map((p, index) => ({
+        mision_id: misionId,
+        orden: index + 1,
+        tipo_pregunta: p.tipo,
+        enunciado: p.enunciado,
+        multimedia: p.multimedia || { tiene_multimedia: false },
+        estructura: p.estructura
+      }));
+
+      const { error: errorPreguntas } = await this.supabase
+        .from('preguntas')
+        .insert(preguntasInsert);
+
+      if (errorPreguntas) throw errorPreguntas;
+
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Error al actualizar misión:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async eliminarMision(misionId: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+      await this.supabase
+        .from('preguntas')
+        .delete()
+        .eq('mision_id', misionId);
+
+      const { error } = await this.supabase
+        .from('misiones')
+        .delete()
+        .eq('id', misionId);
+
+      if (error) throw error;
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Error al eliminar misión:', err);
+      return { success: false, error: err.message };
+    }
+  }
+
+  async cambiarEstadoMision(
+    misionId: string,
+    activo: boolean
+  ): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { error } = await this.supabase
+        .from('misiones')
+        .update({ activo })
+        .eq('id', misionId);
+
+      if (error) throw error;
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('Error al cambiar estado:', err);
+      return { success: false, error: err.message };
+    }
+  }
 }
